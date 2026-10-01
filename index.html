@@ -1771,14 +1771,15 @@ renderFavoriteSection();
 render();
 </script>
 <script>
-(async function(){
+// 骨骼清单（内嵌，避免 Mini App 里 fetch 挂起）
+const SKELETON_DATA = [
+  { "file": "pose_01.png", "pose": "pose_01.json", "label": "站姿-手臂展开" }
+];
+(function(){
   const grid = document.getElementById('skeleton-grid');
   if (!grid || !window.__AUTH_OK) return;
-  let items;
-  try { items = await (await fetch('skeleton_manifest.json')).json(); }
-  catch(e){ grid.innerHTML = '<div class="hint">骨骼图清单加载失败</div>'; return; }
-  if (!items || !items.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
-  items.forEach(it => {
+  if (!SKELETON_DATA.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
+  SKELETON_DATA.forEach(it => {
     const card = document.createElement('div');
     card.style.cssText = 'border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--card);';
     const img = document.createElement('img');
