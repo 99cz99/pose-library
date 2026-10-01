@@ -178,11 +178,11 @@ window.__AUTH_MSG = '';
   <div class="hint">左键选/取消 · 右键调权重 · Shift+右键精确权重</div>
 </header>
 
-<!-- 骨骼图库 -->
-<section id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
-  <div class="col-head" style="margin-bottom:8px;"><span class="label" style="background:var(--accent-soft); color:var(--accent); font-size:14px; font-weight:700;">骨骼图库</span><span class="hint" style="margin-left:8px;">点击缩略图看大图 · 点「下载姿势」拿 JSON</span></div>
-  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">加载中…</div>
-</section>
+<!-- 骨骼图库（可折叠） -->
+<details id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;" open>
+  <summary style="cursor:pointer; font-size:14px; font-weight:700; color:var(--accent); padding:4px 0; list-style:none;">📁 骨骼图库 <span style="color:var(--muted); font-weight:400; font-size:12px;">（点击折叠/展开 · 缩略图点开看大图 · 下载姿势拿 JSON）</span></summary>
+  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;">加载中…</div>
+</details>
 
 <main id="categories"></main>
 
