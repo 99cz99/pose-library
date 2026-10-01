@@ -211,7 +211,7 @@ window.__AUTH_MSG = '';
 <!-- 骨骼图库（可折叠） -->
 <details id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;" open>
   <summary style="cursor:pointer; font-size:14px; font-weight:700; color:var(--accent); padding:4px 0; list-style:none;">📁 骨骼图库 <span style="color:var(--muted); font-weight:400; font-size:12px;">（点击折叠/展开 · 缩略图点开看大图 · 下载姿势拿 JSON）</span></summary>
-  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;">加载中…</div>
+  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;"></div>
 </details>
 
 <main id="categories"></main>
@@ -1808,6 +1808,7 @@ const SKELETON_DATA = [
 (function(){
   const grid = document.getElementById('skeleton-grid');
   if (!grid || !window.__AUTH_OK) return;
+  grid.innerHTML = '';
   if (!SKELETON_DATA.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
   SKELETON_DATA.forEach(it => {
     const card = document.createElement('div');
