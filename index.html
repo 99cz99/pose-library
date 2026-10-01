@@ -217,6 +217,12 @@ window.__AUTH_MSG = '';
   <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;"></div>
 </details>
 
+<!-- 深度图库（可折叠 · 图片由用户自行上传） -->
+<details id="depth-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
+  <summary style="cursor:pointer; font-size:14px; font-weight:700; color:var(--accent); padding:4px 0; list-style:none;">📁 深度图库 <span style="color:var(--muted); font-weight:400; font-size:12px;">（点击折叠/展开 · 缩略图点开看大图 · 下载 PNG）</span></summary>
+  <div id="depth-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;"></div>
+</details>
+
 <main id="categories"></main>
 
 <div class="result-bar">
@@ -259,7 +265,7 @@ const CATEGORIES = [
       {zh:"高分辨率", en:"highres"}, {zh:"超高清", en:"absurdres"}, {zh:"超精细", en:"ultra-detailed"},
       {zh:"细节丰富", en:"intricate details"}, {zh:"锐聚焦", en:"sharp focus"}, {zh:"景深", en:"depth of field"},
       {zh:"散景", en:"bokeh"}, {zh:"柔和光", en:"soft lighting"}, {zh:"轮廓光", en:"rim light"},
-      {zh:"体积光", en:"volumetric lighting"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
+      {zh:"体积光", en:"volumetric lighting"}, {zh:"逆光", en:"backlighting"}, {zh:"戏剧光", en:"dramatic lighting"}, {zh:"上帝光", en:"god rays"}, {zh:"烛光", en:"candlelight"}, {zh:"阳光", en:"sunlight"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
       {zh:"精细手", en:"detailed hands"}, {zh:"五指分明", en:"five fingers"}, {zh:"精细", en:"detailed"},
       {zh:"精细下体", en:"detailed pussy"}, {zh:"精细臀部", en:"detailed ass"}, {zh:"精细乳头", en:"detailed nipples"},
       {zh:"精细肛门", en:"detailed anus"}, {zh:"精细阴蒂", en:"detailed clitoris"}, {zh:"精细阴毛", en:"detailed pubic hair"},
@@ -418,7 +424,7 @@ const CATEGORIES = [
       {zh:"面无表情", en:"blank expression"}, {zh:"痛苦", en:"in pain"}, {zh:"流口水", en:"drooling"},
       {zh:"翻白眼", en:"rolling eyes"}, {zh:"挑眉", en:"raised eyebrows"}, {zh:"眯眼", en:"squinting"},
       {zh:"奸笑", en:"evil smile"}, {zh:"淫笑", en:"lewd smile"},
-      {zh:"喘息", en:"panting"}
+      {zh:"喘息", en:"panting"}, {zh:"眨眼", en:"wink"}, {zh:"淫荡", en:"lustful"}, {zh:"担心", en:"worried"}, {zh:"害怕", en:"scared"}
     ]
   },
   {
@@ -446,7 +452,7 @@ const CATEGORIES = [
       {zh:"骑车", en:"riding bicycle"}, {zh:"写字", en:"writing"}, {zh:"画画", en:"drawing"},
       {zh:"弹奏", en:"playing instrument"}, {zh:"打游戏", en:"gaming"}, {zh:"拍照", en:"taking photo"},
       {zh:"打电话", en:"on phone"}, {zh:"蹲下", en:"crouching"}, {zh:"爬", en:"climbing"},
-      {zh:"踢腿", en:"kicking"}
+      {zh:"踢腿", en:"kicking"}, {zh:"爬行", en:"crawling"}, {zh:"瑜伽", en:"yoga"}, {zh:"运动", en:"exercising"}
     ]
   },
   {
@@ -494,7 +500,7 @@ const CATEGORIES = [
       {zh:"兔耳", en:"bunny ears"}, {zh:"木屐", en:"geta"},
       {zh:"白裙", en:"white dress"}, {zh:"女仆头饰", en:"maid headdress"}, {zh:"花边裙", en:"frilled dress"}, {zh:"洛丽塔洋装", en:"lolita fashion"}, {zh:"洛丽塔头饰", en:"lolita headdress"}, {zh:"甜系洛丽塔", en:"sweet lolita"}, {zh:"哥特洛丽塔", en:"gothic lolita"}, {zh:"古典洛丽塔", en:"classic lolita"}, {zh:"衬裙", en:"petticoat"},
       {zh:"黑裙", en:"black dress"}, {zh:"泡泡袖", en:"puffy sleeves"}, {zh:"裸肩", en:"bare shoulders"},
-      {zh:"白围裙", en:"white apron"}, {zh:"无鞋", en:"no shoes"},
+      {zh:"白围裙", en:"white apron"}, {zh:"无鞋", en:"no shoes"}, {zh:"网袜", en:"fishnet"}, {zh:"乳胶", en:"latex"}, {zh:"皮革", en:"leather"},
       {zh:"乐福鞋", en:"loafers"},
       {zh:"没穿裤子", en:"no pants"}, {zh:"没穿裙子", en:"no skirt"}, {zh:"没穿外衣", en:"no coat"},
       {zh:"没穿外套", en:"no outerwear"}, {zh:"没穿夹克", en:"no jacket"}, {zh:"没穿内衣", en:"no bra"},
@@ -506,11 +512,11 @@ const CATEGORIES = [
   },
   {
     name: "姿势", tags: [
-      {zh:"站立", en:"standing"}, {zh:"坐姿", en:"sitting"}, {zh:"躺", en:"lying"},
+      {zh:"站立", en:"standing"}, {zh:"坐姿", en:"sitting"}, {zh:"躺", en:"lying"}, {zh:"侧躺", en:"lying on side"},
       {zh:"仰卧", en:"on back"}, {zh:"俯卧", en:"on stomach"}, {zh:"四肢着地", en:"all fours"},
       {zh:"跪", en:"kneeling"}, {zh:"蹲", en:"squatting"}, {zh:"抬腿", en:"legs up"},
       {zh:"单脚站", en:"standing on one leg"}, {zh:"翘腿", en:"crossed legs"},
-      {zh:"劈叉", en:"split"}, {zh:"站立劈叉", en:"standing split"}, {zh:"竖向劈叉", en:"vertical split"}, {zh:"单腿抬起", en:"one leg raised"}, {zh:"腿张开", en:"legs apart"}, {zh:"举手", en:"arms up"},
+      {zh:"劈叉", en:"split"}, {zh:"站立劈叉", en:"standing split"}, {zh:"竖向劈叉", en:"vertical split"}, {zh:"单腿抬起", en:"one leg raised"}, {zh:"腿张开", en:"legs apart"}, {zh:"并腿", en:"legs together"}, {zh:"举手", en:"arms up"},
       {zh:"手背身后", en:"arms behind back"}, {zh:"叉腰", en:"hand on hip"},
       {zh:"看向镜头", en:"looking at viewer"}, {zh:"回头看", en:"looking back"}, {zh:"背面", en:"from behind"},
       {zh:"俯视", en:"from above"}, {zh:"仰视", en:"from below"}, {zh:"全身", en:"full body"},
@@ -518,7 +524,7 @@ const CATEGORIES = [
       {zh:"歪头", en:"head tilt"}, {zh:"坐桌上", en:"on desk"}, {zh:"腿朝镜头", en:"legs toward viewer"},
       {zh:"足部特写", en:"foot focus"}, {zh:"脚趾", en:"toes"}, {zh:"踮脚", en:"tiptoe"},
       {zh:"蜷脚趾", en:"curled toes"}, {zh:"并脚", en:"feet together"}, {zh:"抬脚", en:"raised foot"},
-      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"透视缩短", en:"foreshortening"}
+      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"透视缩短", en:"foreshortening"}, {zh:"弯腰", en:"bent over"}, {zh:"弓背后仰", en:"arch back"}, {zh:"大字躺", en:"spread eagle"}, {zh:"手枕脑后", en:"arms behind head"}
     ]
   },
   {
@@ -550,7 +556,7 @@ const CATEGORIES = [
       {zh:"洞穴", en:"cave"}, {zh:"瀑布", en:"waterfall"}, {zh:"河流", en:"river"},
       {zh:"湖泊", en:"lake"}, {zh:"花园", en:"garden"}, {zh:"庭院", en:"courtyard"},
       {zh:"阳台", en:"balcony"}, {zh:"悬崖", en:"cliff"}, {zh:"草原", en:"grassland"},
-      {zh:"竹林", en:"bamboo forest"}, {zh:"樱花", en:"cherry blossoms"},
+      {zh:"竹林", en:"bamboo forest"}, {zh:"樱花", en:"cherry blossoms"}, {zh:"公共澡堂", en:"public bath"},
       {zh:"车站", en:"train station"}, {zh:"火车内", en:"train interior"}, {zh:"车内", en:"car interior"}
     ]
   },
@@ -686,7 +692,7 @@ const CATEGORIES = [
   {
     name: "NSFW（成人标签）", tags: [
       {zh:"全裸", en:"nude"}, {zh:"完全裸体", en:"completely nude"}, {zh:"露胸", en:"breasts"},
-      {zh:"乳头", en:"nipples"}, {zh:"下体", en:"pussy"}, {zh:"张开腿", en:"spread legs"},
+      {zh:"乳头", en:"nipples"}, {zh:"下体", en:"pussy"}, {zh:"阴道透视", en:"internal vaginal view"}, {zh:"子宫透视", en:"internal womb view"}, {zh:"肛门透视", en:"anal cross-section"}, {zh:"张开腿", en:"spread legs"},
       {zh:"无内裤", en:"no panties"}, {zh:"内裤露出", en:"panty peek"}, {zh:"后入", en:"doggystyle"},
       {zh:"传教士", en:"missionary"}, {zh:"骑乘", en:"cowgirl position"}, {zh:"乳交", en:"paizuri"},
       {zh:"口交", en:"blowjob"}, {zh:"手交", en:"handjob"}, {zh:"性交", en:"sex"},
@@ -723,12 +729,12 @@ const CATEGORIES = [
       {zh:"反手吊绑", en:"strappado"}, {zh:"直立绑", en:"upright"}, {zh:"木乃伊式", en:"mummification"},
       {zh:"分腿杆", en:"spreader bar"}, {zh:"手腕并绑", en:"wrists together"}, {zh:"手绑头顶", en:"arms above head"},
       {zh:"胸部束缚", en:"chest harness"}, {zh:"胸部绳缚", en:"breast bondage"}, {zh:"股绳", en:"crotch rope"},
-      {zh:"双腿并绑", en:"legs together"}, {zh:"手铐", en:"handcuffs"}, {zh:"口球", en:"ball gag"},
+      {zh:"双腿并绑", en:"bound legs"}, {zh:"手铐", en:"handcuffs"}, {zh:"口球", en:"ball gag"},
       {zh:"蒙眼", en:"blindfold"}, {zh:"胶带", en:"tape"},
       {zh:"红绳", en:"red rope"}, {zh:"手指入穴", en:"fingers in pussy"},
       {zh:"爱液", en:"pussy juice"}, {zh:"潮吹", en:"squirting"}, {zh:"下体张开", en:"gaping pussy"},
       {zh:"扒开下体", en:"spread pussy"}, {zh:"阴道插入", en:"vaginal penetration"}, {zh:"下体露出", en:"pussy peek"},
-      {zh:"子宫颈", en:"cervix"}, {zh:"阴道", en:"vaginal"}
+      {zh:"子宫颈", en:"cervix"}, {zh:"阴道", en:"vaginal"}, {zh:"腹部鼓起", en:"stomach bulge"}, {zh:"高潮", en:"orgasm"}, {zh:"泌乳", en:"lactation"}, {zh:"受孕", en:"impregnation"}, {zh:"恶堕", en:"mind break"}, {zh:"催眠", en:"hypnosis"}, {zh:"媚药", en:"aphrodisiac"}, {zh:"轮奸", en:"gangbang"}, {zh:"性机器", en:"sex machine"}, {zh:"露出", en:"exhibitionism"}, {zh:"公开性交", en:"public sex"}
     ]
   }
 ];
@@ -1845,6 +1851,49 @@ const SKELETON_DATA = [
       btn.style.cssText = 'display:block; margin:6px; padding:5px; text-align:center; border:1px solid var(--border); border-radius:6px; background:var(--accent-soft); color:var(--accent); font-size:12px; cursor:pointer; text-decoration:none;';
       card.appendChild(btn);
     }
+    grid.appendChild(card);
+  });
+})();
+</script>
+<script>
+// 深度图清单（内嵌，避免 Mini App 里 fetch 挂起）
+// 条目格式：{ "file": "xxx.png", "label": "中文名", "w": 宽, "h": 高 }  —— 图片放进 depth/ 文件夹，往这个数组里加一条即可
+const DEPTH_DATA = [];
+(function(){
+  const grid = document.getElementById('depth-grid');
+  if (!grid || !window.__AUTH_OK) return;
+  grid.innerHTML = '';
+  if (!DEPTH_DATA.length) { grid.innerHTML = '<div class="hint">暂无深度图，上传后在此展示</div>'; return; }
+  DEPTH_DATA.forEach(it => {
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--card); box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;';
+    card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = 'var(--shadow-lg)'; };
+    card.onmouseleave = () => { card.style.transform = ''; card.style.boxShadow = 'var(--shadow)'; };
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'position:relative;';
+    const img = document.createElement('img');
+    img.src = 'depth/' + it.file;
+    img.loading = 'lazy';
+    img.style.cssText = 'width:100%; aspect-ratio:2/3; object-fit:contain; background:#0a0a0a; cursor:zoom-in; display:block;';
+    img.onclick = () => window.open('depth/' + it.file, '_blank');
+    imgWrap.appendChild(img);
+    if (it.w && it.h) {
+      const badge = document.createElement('div');
+      badge.textContent = it.w + '×' + it.h;
+      badge.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,.7); color:#fff; padding:1px 6px; border-radius:4px; font-size:11px; pointer-events:none;';
+      imgWrap.appendChild(badge);
+    }
+    card.appendChild(imgWrap);
+    const label = document.createElement('div');
+    label.textContent = it.label || it.file;
+    label.style.cssText = 'padding:4px 6px 0; font-size:12px; color:var(--text);';
+    card.appendChild(label);
+    const btn = document.createElement('a');
+    btn.href = 'depth/' + it.file;
+    btn.download = it.file.split('/').pop();
+    btn.textContent = '下载';
+    btn.style.cssText = 'display:block; margin:6px; padding:5px; text-align:center; border:1px solid var(--border); border-radius:6px; background:var(--accent-soft); color:var(--accent); font-size:12px; cursor:pointer; text-decoration:none;';
+    card.appendChild(btn);
     grid.appendChild(card);
   });
 })();

@@ -4,9 +4,10 @@
 
 ## 结构
 
-- `index.html` — 主页面（标签生成器 + 骨骼图库）
+- `index.html` — 主页面（标签生成器 + 骨骼图库 + 深度图库）
 - `skeleton_manifest.json` — 骨骼图清单
 - `skeletons/` — 骨骼图图片文件夹
+- `depth/` — 深度图（ControlNet depth 输入）
 
 ## 如何添加骨骼图
 
@@ -15,6 +16,15 @@
 
 ```json
 { "file": "你的图.png", "label": "站姿-手臂上举" }
+```
+
+## 如何添加深度图
+
+1. 把深度图 PNG 放进 `depth/` 文件夹；
+2. 在 `index.html` 里找到 `DEPTH_DATA` 数组，加一条：
+
+```js
+{ "file": "你的图.png", "label": "中文名", "w": 1024, "h": 1536 }
 ```
 
 ## 如何授权用户
