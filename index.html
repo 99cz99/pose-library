@@ -146,7 +146,7 @@
 window.__AUTH_OK = false;
 window.__AUTH_MSG = '';
 (function(){
-  const AUTHORIZED_IDS = [8316305315]; // 授权用户 Telegram 数字 ID
+  const AUTHORIZED_IDS = [8316305315, 8990215936]; // 授权用户 Telegram 数字 ID
   const ALLOW_BROWSER = false; // 本地浏览器调试时改成 true
   let uid = null;
   try { uid = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) ? Telegram.WebApp.initDataUnsafe.user.id : null; } catch(e){}
