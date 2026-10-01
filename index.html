@@ -152,7 +152,8 @@ window.__AUTH_MSG = '';
   try { uid = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) ? Telegram.WebApp.initDataUnsafe.user.id : null; } catch(e){}
   if (uid === null && ALLOW_BROWSER) { window.__AUTH_OK = true; return; }
   if (uid === null) { window.__AUTH_MSG = '请从 Telegram 打开此页面'; return; }
-  if (AUTHORIZED_IDS.length && AUTHORIZED_IDS.indexOf(uid) === -1) { window.__AUTH_MSG = '无权限：你不在授权名单内'; return; }
+  if (!AUTHORIZED_IDS.length) { window.__AUTH_MSG = '尚未配置授权名单'; return; }
+  if (AUTHORIZED_IDS.indexOf(uid) === -1) { window.__AUTH_MSG = '无权限：你不在授权名单内'; return; }
   window.__AUTH_OK = true;
   try { Telegram.WebApp.ready(); } catch(e){}
 })();
