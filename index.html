@@ -1779,16 +1779,24 @@ render();
   if (!items || !items.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
   items.forEach(it => {
     const card = document.createElement('div');
-    card.style.cssText = 'border:1px solid var(--border); border-radius:8px; overflow:hidden; cursor:pointer; background:var(--card);';
+    card.style.cssText = 'border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--card);';
     const img = document.createElement('img');
     img.src = 'skeletons/' + it.file;
     img.loading = 'lazy';
-    img.style.cssText = 'width:100%; aspect-ratio:3/4; object-fit:contain; background:#0a0a0a;';
+    img.style.cssText = 'width:100%; aspect-ratio:3/4; object-fit:contain; background:#0a0a0a; cursor:zoom-in;';
+    img.onclick = () => window.open('skeletons/' + it.file, '_blank');
     const label = document.createElement('div');
     label.textContent = it.label || it.file;
-    label.style.cssText = 'padding:4px 6px; font-size:12px; color:var(--muted);';
+    label.style.cssText = 'padding:4px 6px 0; font-size:12px; color:var(--text);';
     card.appendChild(img); card.appendChild(label);
-    card.onclick = () => window.open('skeletons/' + it.file, '_blank');
+    if (it.pose) {
+      const btn = document.createElement('a');
+      btn.href = 'skeletons/' + it.pose;
+      btn.download = it.pose.split('/').pop();
+      btn.textContent = '下载姿势';
+      btn.style.cssText = 'display:block; margin:6px; padding:5px; text-align:center; border:1px solid var(--border); border-radius:6px; background:var(--accent-soft); color:var(--accent); font-size:12px; cursor:pointer; text-decoration:none;';
+      card.appendChild(btn);
+    }
     grid.appendChild(card);
   });
 })();

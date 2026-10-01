@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "file": "pose_01.png",
+    "pose": "pose_01.json",
+    "label": "站姿-手臂展开"
+  }
+]
