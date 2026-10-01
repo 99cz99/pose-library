@@ -6,19 +6,24 @@
 <title>提示词生成器 · booru tag picker</title>
 <style>
   :root {
-    --bg: #f6f7f9;
+    --bg: #f4f5f8;
     --card: #ffffff;
-    --border: #e3e6ea;
-    --text: #1f2430;
-    --muted: #6b7280;
-    --accent: #5b5bd6;
-    --accent-soft: #ececfa;
-    --chip-hover: #f0f1f5;
-    --radius: 10px;
+    --border: #e6e8ee;
+    --text: #1a1d27;
+    --muted: #697079;
+    --accent: #6366f1;
+    --accent-2: #8b5cf6;
+    --accent-soft: #eef0ff;
+    --chip-hover: #f1f2f7;
+    --shadow: 0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg: 0 8px 24px rgba(16,24,40,.12);
+    --radius: 12px;
   }
   [data-theme="dark"] {
-    --bg: #16181d; --card: #1f232b; --border: #2e3440; --text: #e5e8ef;
-    --muted: #9aa3b2; --accent: #7b7bf0; --accent-soft: #2a2d3a; --chip-hover: #2a2e38;
+    --bg: #0f1115; --card: #171a21; --border: #262b35; --text: #e6e8ee;
+    --muted: #9aa3b2; --accent: #818cf8; --accent-2: #a78bfa; --accent-soft: #232838; --chip-hover: #242936;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,.5);
   }
   [data-theme="dark"] .warnings { background: #3a2f1a; border-color: #6b5315; color: #e8c46a; }
   [data-theme="dark"] .label.pos { color: #7bd69a; background: #1f3a2a; }
@@ -26,18 +31,26 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.5;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   header {
     position: sticky; top: 0; z-index: 10;
     background: var(--card);
     border-bottom: 1px solid var(--border);
     padding: 12px 20px;
+    box-shadow: 0 1px 8px rgba(16,24,40,.05);
   }
-  header h1 { margin: 0 0 10px; font-size: 18px; }
+  header h1 {
+    margin: 0 0 10px; font-size: 18px; font-weight: 700;
+    letter-spacing: 0.2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
   .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .search-wrap { flex: 1 1 200px; min-width: 160px; position: relative; }
   .search-wrap input[type="search"] {
@@ -66,7 +79,10 @@
   details {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow .15s;
   }
+  details[open] { box-shadow: var(--shadow-lg); }
   summary {
     cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 15px;
     user-select: none; list-style: none; display: flex; justify-content: space-between;
@@ -79,9 +95,9 @@
   .chip {
     padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
     background: var(--card); color: var(--text); font-size: 13px; cursor: pointer; user-select: none;
-    transition: background .12s, border-color .12s, color .12s;
+    transition: background .12s, border-color .12s, color .12s, transform .12s, box-shadow .12s;
   }
-  .chip:hover { background: var(--chip-hover); }
+  .chip:hover { background: var(--chip-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
   .chip.active {
     background: var(--accent); border-color: var(--accent); color: #fff;
   }
@@ -92,7 +108,7 @@
   .result-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
     background: var(--card); border-top: 1px solid var(--border);
-    padding: 12px 20px; box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+    padding: 12px 20px; box-shadow: 0 -4px 20px rgba(16,24,40,.08);
   }
   .warnings {
     max-width: 980px; margin: 0 auto 8px; padding: 8px 12px;
@@ -114,9 +130,12 @@
     padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--card); color: var(--text); font-size: 14px; cursor: pointer;
     white-space: nowrap;
+    box-shadow: var(--shadow);
+    transition: transform .12s, box-shadow .12s, background .12s;
   }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn:hover { filter: brightness(1.03); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+  .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+  .btn:active { transform: translateY(0); }
 
   .empty-tip { color: var(--muted); text-align: center; padding: 24px 0; }
   .custom-row { display: flex; gap: 8px; padding: 12px 16px 0; flex-wrap: wrap; }
@@ -1782,7 +1801,9 @@ const SKELETON_DATA = [
   if (!SKELETON_DATA.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
   SKELETON_DATA.forEach(it => {
     const card = document.createElement('div');
-    card.style.cssText = 'border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--card);';
+    card.style.cssText = 'border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--card); box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;';
+    card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = 'var(--shadow-lg)'; };
+    card.onmouseleave = () => { card.style.transform = ''; card.style.boxShadow = 'var(--shadow)'; };
     const img = document.createElement('img');
     img.src = 'skeletons/' + it.file;
     img.loading = 'lazy';
