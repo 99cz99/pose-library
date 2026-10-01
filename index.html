@@ -177,6 +177,12 @@ window.__AUTH_MSG = '';
   <div class="hint">左键选/取消 · 右键调权重 · Shift+右键精确权重</div>
 </header>
 
+<!-- 骨骼图库 -->
+<section id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
+  <div class="col-head" style="margin-bottom:8px;"><span class="label" style="background:var(--accent-soft); color:var(--accent); font-size:14px; font-weight:700;">骨骼图库</span><span class="hint" style="margin-left:8px;">点击缩略图看大图 · 点「下载姿势」拿 JSON</span></div>
+  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;">加载中…</div>
+</section>
+
 <main id="categories"></main>
 
 <div class="result-bar">
@@ -208,12 +214,6 @@ window.__AUTH_MSG = '';
     </div>
   </div>
 </div>
-
-<!-- 骨骼图库 -->
-<section id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
-  <div class="col-head" style="margin-bottom:8px;"><span class="label" style="background:var(--accent-soft); color:var(--accent);">骨骼图库</span><span class="hint" style="margin-left:8px;">点击缩略图看大图</span></div>
-  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;"></div>
-</section>
 
 <script>
 if (!window.__AUTH_OK) { document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,Segoe UI,Microsoft YaHei,sans-serif;color:#888;background:#16181d;padding:20px;">' + (window.__AUTH_MSG || '无权限') + '</div>'; throw new Error('__GATE_DENIED__'); }
