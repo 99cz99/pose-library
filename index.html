@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提示词生成器 · booru tag picker</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --border: #e3e6ea;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #5b5bd6;
+    --accent-soft: #ececfa;
+    --chip-hover: #f0f1f5;
+    --radius: 10px;
+  }
+  [data-theme="dark"] {
+    --bg: #16181d; --card: #1f232b; --border: #2e3440; --text: #e5e8ef;
+    --muted: #9aa3b2; --accent: #7b7bf0; --accent-soft: #2a2d3a; --chip-hover: #2a2e38;
+  }
+  [data-theme="dark"] .warnings { background: #3a2f1a; border-color: #6b5315; color: #e8c46a; }
+  [data-theme="dark"] .label.pos { color: #7bd69a; background: #1f3a2a; }
+  [data-theme="dark"] .label.neg { color: #f08a82; background: #3a1f1d; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+  }
+  header h1 { margin: 0 0 10px; font-size: 18px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search-wrap { flex: 1 1 200px; min-width: 160px; position: relative; }
+  .search-wrap input[type="search"] {
+    width: 100%;
+    padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; outline: none;
+  }
+  .search-wrap input[type="search"]:focus { border-color: var(--accent); }
+  .suggest {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.14); max-height: 320px; overflow-y: auto;
+  }
+  .suggest-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; }
+  .suggest-item:hover { background: var(--chip-hover); }
+  .suggest-item .en { color: var(--muted); font-size: 12px; }
+  .suggest-item .fav { margin-left: auto; border: none; background: transparent; cursor: pointer; font-size: 15px; color: var(--muted); padding: 2px 5px; }
+  .suggest-item .fav.on { color: #f5b301; }
+  .count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  main {
+    max-width: 980px; margin: 0 auto;
+    padding: 16px 20px 440px; /* bottom padding so sticky bar doesn't cover last category */
+  }
+  details {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+  }
+  summary {
+    cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 15px;
+    user-select: none; list-style: none; display: flex; justify-content: space-between;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "▾"; color: var(--muted); }
+  details[open] summary::after { content: "▴"; }
+  summary .tag-count { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
+  .chip {
+    padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--card); color: var(--text); font-size: 13px; cursor: pointer; user-select: none;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .chip:hover { background: var(--chip-hover); }
+  .chip.active {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .chip.conflict { border-color: #e5484d; color: #c0353a; }
+  .chip.active.conflict { background: #e5484d; border-color: #e5484d; color: #fff; }
+  .col-btns { display: flex; gap: 6px; }
+
+  .result-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--card); border-top: 1px solid var(--border);
+    padding: 12px 20px; box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+  }
+  .warnings {
+    max-width: 980px; margin: 0 auto 8px; padding: 8px 12px;
+    background: #fff4e5; border: 1px solid #f0c36d; border-radius: 8px;
+    color: #8a5a00; font-size: 13px;
+  }
+  .result-bar .row { display: flex; gap: 12px; align-items: stretch; max-width: 980px; margin: 0 auto; }
+  .result-col { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .col-head { display: flex; align-items: center; justify-content: space-between; }
+  .label { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .label.pos { color: #1a7f37; background: #e6f4ea; }
+  .label.neg { color: #b42318; background: #fdecea; }
+  .result-bar textarea {
+    width: 100%; min-height: 56px; resize: vertical;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg);
+  }
+  .btn {
+    padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--card); color: var(--text); font-size: 14px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:hover { filter: brightness(1.03); }
+
+  .empty-tip { color: var(--muted); text-align: center; padding: 24px 0; }
+  .custom-row { display: flex; gap: 8px; padding: 12px 16px 0; flex-wrap: wrap; }
+  .custom-row input { flex: 1 1 140px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+  .custom-row select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--card); color: var(--text); }
+  .sel-panel { max-width: 980px; margin: 0 auto 8px; }
+  .sel-panel summary { padding: 6px 0; font-weight: 600; font-size: 13px; cursor: pointer; user-select: none; }
+  .sel-list { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; margin-bottom: 8px; }
+  .sel-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; }
+  .sel-label { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: grab; user-select: none; }
+  .sel-label:active { cursor: grabbing; }
+  .sel-item input[type="range"] { flex: 0 0 90px; }
+  .sel-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 5px; }
+  .sel-item .del:hover { color: #d33; }
+  .custom-row input:focus { border-color: var(--accent); }
+  .custom-row .btn { flex: 0 0 auto; }
+  .custom-chip { display: inline-flex; align-items: center; }
+  .custom-chip .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 5px; border-radius: 4px; }
+  .custom-chip .del:hover { color: #d33; }
+  @media (max-width: 640px) {
+    .result-bar .row { flex-direction: column; }
+  }
+</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+// ===== Telegram 授权门 =====
+window.__AUTH_OK = false;
+window.__AUTH_MSG = '';
+(function(){
+  const AUTHORIZED_IDS = []; // TODO: 填入授权用户的 Telegram 数字 ID
+  const ALLOW_BROWSER = false; // 本地浏览器调试时改成 true
+  let uid = null;
+  try { uid = (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) ? Telegram.WebApp.initDataUnsafe.user.id : null; } catch(e){}
+  if (uid === null && ALLOW_BROWSER) { window.__AUTH_OK = true; return; }
+  if (uid === null) { window.__AUTH_MSG = '请从 Telegram 打开此页面'; return; }
+  if (AUTHORIZED_IDS.length && AUTHORIZED_IDS.indexOf(uid) === -1) { window.__AUTH_MSG = '无权限：你不在授权名单内'; return; }
+  window.__AUTH_OK = true;
+  try { Telegram.WebApp.ready(); } catch(e){}
+})();
+</script>
+</head>
+<body>
+<header>
+  <h1>提示词生成器</h1>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="搜索标签（中文 / 英文）">
+      <div id="suggest" class="suggest" style="display:none"></div>
+    </div>
+    <span class="count" id="count">已选 0</span>
+    <button class="btn" id="undo">↶ 撤销</button>
+    <button class="btn" id="redo">↷ 重做</button>
+    <button class="btn" id="clear">清空</button>
+    <button class="btn" id="random">🎲 随机</button>
+    <button class="btn" id="theme-toggle">🌙</button>
+  </div>
+  <div class="hint">左键选/取消 · 右键调权重 · Shift+右键精确权重</div>
+</header>
+
+<main id="categories"></main>
+
+<div class="result-bar">
+  <div id="warnings" class="warnings" style="display:none"></div>
+  <details class="sel-panel" id="sel-panel" open>
+    <summary>已选标签（拖拽排序 · 滑杆调权重）</summary>
+    <div class="sel-list" id="sel-list"></div>
+  </details>
+  <div style="max-width:980px; margin:0 auto 8px; display:flex; align-items:center; gap:8px;">
+    <span class="label" style="background:var(--accent-soft); color:var(--accent);">输出格式</span>
+    <select id="format-select" style="padding:5px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); outline:none;">
+      <option value="weight">(tag:1.2) 权重</option>
+      <option value="plain">纯标签（无权重）</option>
+    </select>
+  </div>
+  <div style="max-width:980px; margin:0 auto 8px; display:flex; align-items:center; gap:8px;">
+    <span class="label" style="background:var(--accent-soft); color:var(--accent);">导入</span>
+    <input id="import-input" type="text" placeholder="粘贴已有提示词（用 --neg 分隔负面），如 1girl, no pants --neg lowres, bad hands" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); outline:none;">
+    <button class="btn primary" id="import-btn">导入</button>
+  </div>
+  <div class="row">
+    <div class="result-col">
+      <div class="col-head"><span class="label pos">正面</span><span class="col-btns"><button class="btn primary" id="copy-pos">复制</button><button class="btn" id="copy-all">合并复制</button></span></div>
+      <textarea id="result-pos" readonly placeholder="点选标签，正面提示词出现在这里…"></textarea>
+    </div>
+    <div class="result-col">
+      <div class="col-head"><span class="label neg">负面</span><span class="col-btns"><button class="btn" id="neg-all">全选</button><button class="btn" id="copy-neg">复制</button></span></div>
+      <textarea id="result-neg" readonly placeholder="「负面」分类里的标签出现在这里…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 骨骼图库 -->
+<section id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
+  <div class="col-head" style="margin-bottom:8px;"><span class="label" style="background:var(--accent-soft); color:var(--accent);">骨骼图库</span><span class="hint" style="margin-left:8px;">点击缩略图看大图</span></div>
+  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px;"></div>
+</section>
+
+<script>
+if (!window.__AUTH_OK) { document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,Segoe UI,Microsoft YaHei,sans-serif;color:#888;background:#16181d;padding:20px;">' + (window.__AUTH_MSG || '无权限') + '</div>'; throw new Error('__GATE_DENIED__'); }
+// ============ 标签库（想加标签：往对应分类的数组里加一行 {zh:"中文", en:"english tag"} 即可）============
+const CATEGORIES = [
+  {
+    name: "画质", tags: [
+      {zh:"杰作", en:"masterpiece"}, {zh:"最高画质", en:"best quality"}, {zh:"高质量", en:"high quality"},
+      {zh:"高分辨率", en:"highres"}, {zh:"超高清", en:"absurdres"}, {zh:"超精细", en:"ultra-detailed"},
+      {zh:"细节丰富", en:"intricate details"}, {zh:"锐聚焦", en:"sharp focus"}, {zh:"景深", en:"depth of field"},
+      {zh:"散景", en:"bokeh"}, {zh:"柔和光", en:"soft lighting"}, {zh:"轮廓光", en:"rim light"},
+      {zh:"体积光", en:"volumetric lighting"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
+      {zh:"精细手", en:"detailed hands"}, {zh:"五指分明", en:"five fingers"}, {zh:"精细", en:"detailed"},
+      {zh:"精细下体", en:"detailed pussy"}, {zh:"精细臀部", en:"detailed ass"}, {zh:"精细乳头", en:"detailed nipples"},
+      {zh:"精细肛门", en:"detailed anus"}, {zh:"精细阴蒂", en:"detailed clitoris"}, {zh:"精细阴毛", en:"detailed pubic hair"},
+      {zh:"精细手指", en:"detailed fingers"}, {zh:"精细嘴唇", en:"detailed lips"}, {zh:"精细脚", en:"detailed feet"},
+      {zh:"精细脚趾", en:"detailed toes"}, {zh:"精细腿", en:"detailed legs"}, {zh:"精细大腿", en:"detailed thighs"},
+      {zh:"精细胸部", en:"detailed breasts"}, {zh:"精细肚脐", en:"detailed navel"}, {zh:"精细腋下", en:"detailed armpits"},
+      {zh:"精细头发", en:"detailed hair"}, {zh:"精细背景", en:"detailed background"},
+      {zh:"完美的手", en:"perfect hands"},
+      {zh:"高美学", en:"very aesthetic"}
+    ]
+  },
+  {
+    name: "画风", tags: [
+      {zh:"动漫", en:"anime"}, {zh:"半写实", en:"semi-realistic"}, {zh:"写实", en:"realistic"},
+      {zh:"油画", en:"oil painting"}, {zh:"水彩", en:"watercolor"}, {zh:"线稿", en:"lineart"},
+      {zh:"厚涂", en:"painterly"}, {zh:"单色", en:"monochrome"}, {zh:"粉彩", en:"pastel"},
+      {zh:"草图", en:"sketch"},
+      {zh:"动漫风格", en:"anime style"}, {zh:"插画", en:"illustration"}
+    ]
+  },
+  {
+    name: "主题氛围", tags: [
+      {zh:"黑暗", en:"dark"}, {zh:"明亮", en:"bright"}, {zh:"温馨", en:"cozy"},
+      {zh:"浪漫", en:"romantic"}, {zh:"神秘", en:"mysterious"}, {zh:"史诗", en:"epic"},
+      {zh:"奇幻", en:"fantasy"}, {zh:"科幻", en:"sci-fi"}, {zh:"未来", en:"futuristic"},
+      {zh:"古风", en:"historical"},
+      {zh:"孤独", en:"lonely"}, {zh:"宁静", en:"serene"}, {zh:"梦幻", en:"dreamy"},
+      {zh:"忧郁", en:"melancholic"}, {zh:"诡异", en:"eerie"}, {zh:"末日", en:"apocalyptic"},
+      {zh:"赛博朋克", en:"cyberpunk"}, {zh:"蒸汽朋克", en:"steampunk"}
+    ]
+  },
+  {
+    name: "色彩色调", tags: [
+      {zh:"怀旧", en:"sepia"}, {zh:"鲜艳", en:"vivid"}, {zh:"柔和", en:"muted"},
+      {zh:"粉彩色调", en:"pastel colors"}, {zh:"暗调", en:"dark tone"}, {zh:"暖色", en:"warm colors"},
+      {zh:"冷色", en:"cool colors"}, {zh:"灰阶", en:"greyscale"},
+      {zh:"黑白", en:"black and white"}, {zh:"负片色", en:"inverted colors"}, {zh:"霓虹", en:"neon"},
+      {zh:"金属色", en:"metallic"}, {zh:"渐变", en:"gradient"}, {zh:"高对比", en:"high contrast"},
+      {zh:"低对比", en:"low contrast"}, {zh:"低饱和", en:"desaturated"}, {zh:"蓝色调", en:"blue color"},
+      {zh:"粉色调", en:"pink color"}, {zh:"红色调", en:"red color"}, {zh:"紫色调", en:"purple color"},
+      {zh:"金色", en:"gold"}
+    ]
+  },
+  {
+    name: "角色", tags: [
+      {zh:"单女", en:"1girl"}, {zh:"单男", en:"1boy"}, {zh:"单人", en:"solo"}, {zh:"两女", en:"2girls"},
+      {zh:"多女", en:"multiple girls"}, {zh:"多男", en:"multiple boys"}, {zh:"情侣", en:"couple"},
+      {zh:"娇小少女", en:"loli"}, {zh:"成熟女性", en:"mature female"}, {zh:"熟女", en:"milf"},
+      {zh:"美少年", en:"bishounen"}, {zh:"原创角色", en:"original"},
+      {zh:"女孩", en:"girl"}, {zh:"女人", en:"woman"}, {zh:"男人", en:"man"},
+      {zh:"正太", en:"shota"}, {zh:"老爷爷", en:"old man"}, {zh:"老奶奶", en:"old woman"},
+      {zh:"双胞胎", en:"twins"}, {zh:"多人", en:"multiple people"}, {zh:"人群", en:"crowd"},
+      {zh:"兄妹", en:"siblings"}, {zh:"女主角", en:"heroine"}
+    ]
+  },
+  {
+    name: "身体", tags: [
+      {zh:"贫乳", en:"small breasts"}, {zh:"中等胸", en:"medium breasts"}, {zh:"巨乳", en:"large breasts"},
+      {zh:"爆乳", en:"huge breasts"}, {zh:"平胸", en:"flat chest"}, {zh:"纤细", en:"slim"},
+      {zh:"苗条", en:"slender"}, {zh:"丰腴", en:"curvy"}, {zh:"肉感大腿", en:"thick thighs"},
+      {zh:"宽胯", en:"wide hips"}, {zh:"细腰", en:"narrow waist"}, {zh:"翘臀", en:"big butt"},
+      {zh:"白肤", en:"pale skin"}, {zh:"小麦肤", en:"tanned"}, {zh:"深肤色", en:"dark skin"},
+      {zh:"痣", en:"mole"}, {zh:"雀斑", en:"freckles"}, {zh:"湿肤", en:"wet skin"},
+      {zh:"汗珠", en:"sweat"}, {zh:"光泽肤", en:"glossy skin"},
+      {zh:"腹肌", en:"abs"}, {zh:"肌肉", en:"muscles"}, {zh:"娇小", en:"petite"},
+      {zh:"高挑", en:"tall"}, {zh:"怀孕", en:"pregnant"}, {zh:"人耳", en:"human ears"},
+      {zh:"乳沟", en:"cleavage"}, {zh:"下乳", en:"underboob"}, {zh:"侧乳", en:"sideboob"},
+      {zh:"垂乳", en:"hanging breasts"}, {zh:"乳贴", en:"covered nipples"},
+      {zh:"锁骨", en:"collarbone"}, {zh:"肩膀", en:"shoulders"}, {zh:"脖子", en:"neck"},
+      {zh:"腋下", en:"armpit"},
+      {zh:"露腰", en:"midriff"}, {zh:"肚腩", en:"belly"}, {zh:"肚脐", en:"navel"}, {zh:"腰", en:"waist"},
+      {zh:"臀部", en:"ass"}, {zh:"腿缝", en:"thigh gap"},
+      {zh:"腿", en:"legs"}, {zh:"光腿/裸腿", en:"bare legs"}, {zh:"脚", en:"feet"},
+      {zh:"脚踝", en:"ankle"}, {zh:"脚跟", en:"heel"}, {zh:"小腿", en:"calf"},
+      {zh:"趾缝", en:"toe gap"}, {zh:"脚趾甲", en:"toenails"}, {zh:"指甲油", en:"nail polish"},
+      {zh:"涂趾甲", en:"painted toenails"},
+      {zh:"手臂", en:"arms"}, {zh:"肌肉臂", en:"muscular arms"},
+      {zh:"妊娠纹", en:"stretch marks"}, {zh:"晒痕", en:"tan lines"}, {zh:"纹身", en:"tattoo"},
+      {zh:"伤疤", en:"scar"}, {zh:"胎记", en:"birthmark"}, {zh:"体毛", en:"body hair"},
+      {zh:"肚脐环", en:"navel piercing"}, {zh:"凸肚脐", en:"outie navel"},
+      {zh:"挺翘胸", en:"perky breasts"}, {zh:"圆润胸", en:"round breasts"}, {zh:"尖胸", en:"pointy breasts"}
+    ]
+  },
+  {
+    name: "身材体型", tags: [
+      {zh:"微胖", en:"chubby"}, {zh:"丰满", en:"plump"}, {zh:"骨感", en:"skinny"},
+      {zh:"偏瘦", en:"thin"}, {zh:"沙漏身材", en:"hourglass figure"}, {zh:"紧实", en:"toned"},
+      {zh:"运动型", en:"athletic"}, {zh:"标准体型", en:"average build"}, {zh:"梨形身材", en:"pear-shaped figure"},
+      {zh:"长腿", en:"long legs"}, {zh:"短腿", en:"short legs"},
+      {zh:"宽肩", en:"wide shoulders"}, {zh:"窄肩", en:"narrow shoulders"},
+      {zh:"肌肉型", en:"muscular"}, {zh:"马甲线", en:"well-defined abs"},
+      {zh:"肌肉大腿", en:"muscular thighs"}, {zh:"矮个丰满", en:"shortstack"}
+    ]
+  },
+  {
+    name: "肤质", tags: [
+      {zh:"光滑皮肤", en:"smooth skin"}, {zh:"柔软皮肤", en:"soft skin"}, {zh:"精细皮肤", en:"detailed skin"},
+      {zh:"写实皮肤", en:"realistic skin"}, {zh:"瓷肌", en:"porcelain skin"}, {zh:"水光肌", en:"dewy skin"},
+      {zh:"半透肤", en:"translucent skin"}, {zh:"健康皮肤", en:"healthy skin"},
+      {zh:"油性皮肤", en:"oily skin"}, {zh:"哑光肤", en:"matte skin"}, {zh:"鸡皮疙瘩", en:"goosebumps"},
+      {zh:"青筋", en:"visible veins"}, {zh:"湿润肤", en:"moist skin"}
+    ]
+  },
+  {
+    name: "头发", tags: [
+      {zh:"长发", en:"long hair"}, {zh:"超长发", en:"very long hair"}, {zh:"中长发", en:"medium hair"},
+      {zh:"短发", en:"short hair"}, {zh:"双马尾", en:"twintails"}, {zh:"单马尾", en:"ponytail"},
+      {zh:"侧马尾", en:"side ponytail"}, {zh:"麻花辫", en:"braid"}, {zh:"发髻", en:"hair bun"},
+      {zh:"双丸子头", en:"double bun"}, {zh:"呆毛", en:"ahoge"}, {zh:"刘海", en:"bangs"},
+      {zh:"发丝遮眼", en:"hair between eyes"}, {zh:"波浪发", en:"wavy hair"}, {zh:"直发", en:"straight hair"},
+      {zh:"卷发", en:"curly hair"}, {zh:"乱发", en:"messy hair"}, {zh:"发饰", en:"hair ornament"},
+      {zh:"花饰", en:"hair flower"}, {zh:"发带", en:"hair ribbon"},
+      {zh:"白发", en:"white hair"}, {zh:"金发", en:"blonde hair"}, {zh:"棕发", en:"brown hair"},
+      {zh:"黑发", en:"black hair"}, {zh:"红发", en:"red hair"}, {zh:"粉发", en:"pink hair"},
+      {zh:"蓝发", en:"blue hair"}, {zh:"紫发", en:"purple hair"}, {zh:"绿发", en:"green hair"},
+      {zh:"银发", en:"silver hair"}, {zh:"挑染", en:"multicolored hair"},
+      {zh:"鬓发", en:"sidelocks"}, {zh:"双麻花辫", en:"twin braids"}, {zh:"钻头卷", en:"drill hair"},
+      {zh:"姬发式", en:"hime cut"}, {zh:"齐刘海", en:"blunt bangs"}, {zh:"单眼遮发", en:"hair over one eye"},
+      {zh:"侧分刘海", en:"swept bangs"}, {zh:"中分", en:"parted hair"}, {zh:"不对称发", en:"asymmetrical hair"},
+      {zh:"漂浮发", en:"floating hair"}, {zh:"侧吸发", en:"hair intakes"}, {zh:"发夹", en:"hairclip"},
+      {zh:"发箍", en:"hairband"}, {zh:"编马尾", en:"braided ponytail"}, {zh:"花冠辫", en:"crown braid"}
+    ]
+  },
+  {
+    name: "眼睛", tags: [
+      {zh:"蓝眼", en:"blue eyes"}, {zh:"红眼", en:"red eyes"}, {zh:"绿眼", en:"green eyes"},
+      {zh:"黄眼", en:"yellow eyes"}, {zh:"粉眼", en:"pink eyes"}, {zh:"紫眼", en:"purple eyes"},
+      {zh:"棕眼", en:"brown eyes"}, {zh:"异色瞳", en:"heterochromia"}, {zh:"心形瞳", en:"heart-shaped pupils"},
+      {zh:"符号瞳", en:"symbol-shaped pupils"}, {zh:"星形瞳", en:"star-shaped pupils"}, {zh:"竖瞳", en:"slit pupils"},
+      {zh:"渐变瞳", en:"gradient eyes"}, {zh:"闭眼", en:"closed eyes"},
+      {zh:"发间露眼", en:"eyes visible through hair"}, {zh:"半闭眼", en:"half-closed eyes"}, {zh:"呆滞眼", en:"tsukkomi"},
+      {zh:"瞪大眼", en:"wide-eyed"}, {zh:"充血眼", en:"bloodshot eyes"}, {zh:"空洞眼", en:"empty eyes"},
+      {zh:"眼影", en:"eyeshadow"}, {zh:"睫毛", en:"eyelashes"}, {zh:"粗眉", en:"thick eyebrows"},
+      {zh:"眉毛", en:"eyebrows"}, {zh:"彩色睫毛", en:"colored eyelashes"}, {zh:"发光眼", en:"glowing eyes"}
+    ]
+  },
+  {
+    name: "脸型", tags: [
+      {zh:"娃娃脸", en:"baby face"}, {zh:"圆脸", en:"round face"}, {zh:"鹅蛋脸", en:"oval face"},
+      {zh:"心形脸", en:"heart-shaped face"}, {zh:"尖下巴", en:"pointed chin"}, {zh:"圆脸颊", en:"chubby cheeks"},
+      {zh:"双下巴", en:"double chin"}, {zh:"酒窝", en:"dimples"}, {zh:"瓜子脸", en:"slim face"},
+      {zh:"小脸", en:"small face"},
+      {zh:"方下巴", en:"square jaw"}, {zh:"长脸", en:"long face"}, {zh:"棱角脸", en:"angular face"},
+      {zh:"柔和五官", en:"soft features"}
+    ]
+  },
+  {
+    name: "表情", tags: [
+      {zh:"微笑", en:"smile"}, {zh:"咧嘴笑", en:"grin"}, {zh:"张嘴", en:"open mouth"},
+      {zh:"闭嘴", en:"closed mouth"}, {zh:"脸红", en:"blush"}, {zh:"流泪", en:"tears"},
+      {zh:"大哭", en:"crying"}, {zh:"生气", en:"angry"}, {zh:"不耐烦", en:"annoyed"},
+      {zh:"悲伤", en:"sad"}, {zh:"惊讶", en:"surprised"}, {zh:"开心", en:"happy"},
+      {zh:"害羞", en:"embarrassed"}, {zh:"魅惑笑", en:"seductive smile"}, {zh:"吐舌", en:"tongue out"},
+      {zh:"微张唇", en:"parted lips"}, {zh:"单眼闭", en:"one eye closed"}, {zh:"皱眉", en:"wince"},
+      {zh:"虎牙", en:"fang"}, {zh:"坏笑", en:"smirk"}, {zh:"嘟嘴", en:"pout"},
+      {zh:"面无表情", en:"blank expression"}, {zh:"痛苦", en:"in pain"}, {zh:"流口水", en:"drooling"},
+      {zh:"翻白眼", en:"rolling eyes"}, {zh:"挑眉", en:"raised eyebrows"}, {zh:"眯眼", en:"squinting"},
+      {zh:"奸笑", en:"evil smile"}, {zh:"淫笑", en:"lewd smile"},
+      {zh:"喘息", en:"panting"}
+    ]
+  },
+  {
+    name: "嘴巴/唇", tags: [
+      {zh:"红唇", en:"red lips"}, {zh:"口红", en:"lipstick"}, {zh:"光泽唇", en:"glossy lips"},
+      {zh:"丰满唇", en:"plump lips"}, {zh:"薄唇", en:"thin lips"}, {zh:"咬唇", en:"biting lip"},
+      {zh:"猫嘴", en:"cat mouth"}, {zh:"唇彩", en:"lip gloss"},
+      {zh:"嘴唇", en:"lips"}, {zh:"抿嘴", en:"pursed lips"}, {zh:"舔唇", en:"licking lips"},
+      {zh:"唇印", en:"lipstick mark"}, {zh:"小嘴", en:"small mouth"}, {zh:"大嘴", en:"wide mouth"},
+      {zh:"牙齿", en:"teeth"}, {zh:"露齿", en:"showing teeth"},
+      {zh:"舌头", en:"tongue"}, {zh:"大张嘴", en:"wide open mouth"},
+      {zh:"心形嘴", en:"heart-shaped mouth"}, {zh:"波浪嘴", en:"wavy mouth"}
+    ]
+  },
+  {
+    name: "动作", tags: [
+      {zh:"走路", en:"walking"}, {zh:"跑", en:"running"}, {zh:"跳", en:"jumping"},
+      {zh:"跳舞", en:"dancing"}, {zh:"拥抱", en:"hugging"}, {zh:"吃", en:"eating"},
+      {zh:"喝", en:"drinking"}, {zh:"睡觉", en:"sleeping"}, {zh:"伸懒腰", en:"stretching"},
+      {zh:"伸手", en:"reaching out"}, {zh:"指", en:"pointing"}, {zh:"挥手", en:"waving"},
+      {zh:"战斗", en:"fighting"}, {zh:"游泳", en:"swimming"}, {zh:"接吻", en:"kissing"},
+      {zh:"阅读", en:"reading"}, {zh:"做饭", en:"cooking"}, {zh:"洗澡", en:"bathing"},
+      {zh:"唱歌", en:"singing"}, {zh:"飞", en:"flying"}, {zh:"祈祷", en:"praying"},
+      {zh:"拿鞋", en:"holding shoe"},
+      {zh:"骑车", en:"riding bicycle"}, {zh:"写字", en:"writing"}, {zh:"画画", en:"drawing"},
+      {zh:"弹奏", en:"playing instrument"}, {zh:"打游戏", en:"gaming"}, {zh:"拍照", en:"taking photo"},
+      {zh:"打电话", en:"on phone"}, {zh:"蹲下", en:"crouching"}, {zh:"爬", en:"climbing"},
+      {zh:"踢腿", en:"kicking"}
+    ]
+  },
+  {
+    name: "手部手势", tags: [
+      {zh:"剪刀手", en:"v sign"}, {zh:"点赞", en:"thumbs up"}, {zh:"和平手势", en:"peace sign"},
+      {zh:"手枪手势", en:"finger gun"}, {zh:"托腮", en:"hand on cheek"}, {zh:"抱臂", en:"arms crossed"},
+      {zh:"插兜", en:"hands in pockets"}, {zh:"摊手", en:"open hands"},
+      {zh:"中指", en:"middle finger"}, {zh:"手指比心", en:"finger heart"}, {zh:"双手比心", en:"hand heart"},
+      {zh:"OK手势", en:"ok sign"}, {zh:"握手", en:"handshake"}, {zh:"捂嘴", en:"hand over mouth"},
+      {zh:"摸头", en:"hand on head"}, {zh:"摸脸", en:"hand on face"}, {zh:"十指紧扣", en:"interlocked fingers"},
+      {zh:"牵手", en:"holding hands"}, {zh:"勾手指", en:"beckoning"}
+    ]
+  },
+  {
+    name: "服装", tags: [
+      {zh:"连衣裙", en:"dress"}, {zh:"裙子", en:"skirt"}, {zh:"超短裙", en:"miniskirt"},
+      {zh:"百褶裙", en:"pleated skirt"}, {zh:"女仆装", en:"maid"}, {zh:"校服", en:"school uniform"},
+      {zh:"水手服", en:"sailor uniform"}, {zh:"比基尼", en:"bikini"}, {zh:"泳装", en:"swimsuit"},
+      {zh:"连体泳衣", en:"one-piece swimsuit"}, {zh:"内衣", en:"lingerie"}, {zh:"胸罩", en:"bra"},
+      {zh:"内裤", en:"panties"}, {zh:"过膝袜", en:"thighhighs"}, {zh:"连裤袜", en:"pantyhose"},
+      {zh:"长筒袜", en:"stockings"}, {zh:"吊袜带", en:"garter belt"}, {zh:"及膝袜", en:"kneehighs"}, {zh:"黑丝", en:"black pantyhose"}, {zh:"白丝", en:"white pantyhose"}, {zh:"肉丝", en:"nude pantyhose"}, {zh:"透肉", en:"see-through"},
+      {zh:"卫衣", en:"hoodie"}, {zh:"夹克", en:"jacket"}, {zh:"衬衫", en:"shirt"},
+      {zh:"T恤", en:"t-shirt"}, {zh:"毛衣", en:"sweater"}, {zh:"大衣", en:"coat"},
+      {zh:"和服", en:"kimono"}, {zh:"旗袍", en:"cheongsam"}, {zh:"分离袖", en:"detached sleeves"},
+      {zh:"无袖", en:"sleeveless"}, {zh:"项圈", en:"choker"}, {zh:"颈铃", en:"neck bell"},
+      {zh:"手套", en:"gloves"}, {zh:"蝴蝶结", en:"bow"}, {zh:"缎带", en:"ribbon"},
+      {zh:"高跟鞋", en:"high heels"}, {zh:"靴子", en:"boots"}, {zh:"凉鞋", en:"sandals"},
+      {zh:"脚链", en:"anklet"}, {zh:"脚趾环", en:"toe ring"}, {zh:"足袋", en:"tabi"},
+      {zh:"赤脚", en:"barefoot"}, {zh:"眼镜", en:"glasses"}, {zh:"眼罩", en:"eyepatch"},
+      {zh:"角", en:"horns"},
+      {zh:"尾巴", en:"tail"}, {zh:"耳机", en:"headphones"},
+      {zh:"护士", en:"nurse"}, {zh:"警察", en:"police"}, {zh:"兔女郎", en:"bunny suit"},
+      {zh:"哥特", en:"gothic"}, {zh:"睡衣", en:"pajamas"}, {zh:"运动服", en:"sportswear"},
+      {zh:"死库水", en:"school swimsuit"}, {zh:"围裙", en:"apron"},
+      {zh:"露肩", en:"off-shoulder"}, {zh:"抹胸", en:"strapless"}, {zh:"吊带", en:"camisole"},
+      {zh:"灯笼裤", en:"bloomers"}, {zh:"体操服", en:"gym uniform"}, {zh:"冬装", en:"winter clothes"},
+      {zh:"蕾丝", en:"lace"}, {zh:"花边", en:"frills"}, {zh:"薄纱", en:"sheer"},
+      {zh:"叠穿", en:"layered clothes"},
+      {zh:"铠甲", en:"armor"}, {zh:"军装", en:"military uniform"}, {zh:"婚纱", en:"wedding dress"},
+      {zh:"浴衣", en:"yukata"}, {zh:"巫女服", en:"miko"}, {zh:"医生", en:"doctor"},
+      {zh:"燕尾服", en:"tuxedo"}, {zh:"竞速泳衣", en:"racing swimsuit"}, {zh:"比基尼铠甲", en:"bikini armor"},
+      {zh:"空姐", en:"flight attendant"}, {zh:"办公室女郎", en:"office lady"}, {zh:"睡裙", en:"nightgown"},
+      {zh:"吊带裙", en:"sundress"}, {zh:"护士帽", en:"nurse cap"}, {zh:"听诊器", en:"stethoscope"},
+      {zh:"帽子", en:"hat"}, {zh:"头纱", en:"veil"}, {zh:"捧花", en:"bouquet"},
+      {zh:"兔耳", en:"bunny ears"}, {zh:"木屐", en:"geta"},
+      {zh:"白裙", en:"white dress"}, {zh:"女仆头饰", en:"maid headdress"}, {zh:"花边裙", en:"frilled dress"}, {zh:"洛丽塔洋装", en:"lolita fashion"}, {zh:"洛丽塔头饰", en:"lolita headdress"}, {zh:"甜系洛丽塔", en:"sweet lolita"}, {zh:"哥特洛丽塔", en:"gothic lolita"}, {zh:"古典洛丽塔", en:"classic lolita"}, {zh:"衬裙", en:"petticoat"},
+      {zh:"黑裙", en:"black dress"}, {zh:"泡泡袖", en:"puffy sleeves"}, {zh:"裸肩", en:"bare shoulders"},
+      {zh:"白围裙", en:"white apron"}, {zh:"无鞋", en:"no shoes"},
+      {zh:"乐福鞋", en:"loafers"},
+      {zh:"没穿裤子", en:"no pants"}, {zh:"没穿裙子", en:"no skirt"}, {zh:"没穿外衣", en:"no coat"},
+      {zh:"没穿外套", en:"no outerwear"}, {zh:"没穿夹克", en:"no jacket"}, {zh:"没穿内衣", en:"no bra"},
+      {zh:"没穿内裤", en:"no underwear"}, {zh:"没穿袜子", en:"no socks"},
+      {zh:"没穿上衣", en:"no shirt"}, {zh:"没穿连衣裙", en:"no dress"}, {zh:"没穿连裤袜", en:"no tights"},
+      {zh:"没穿丝袜", en:"no stockings"}, {zh:"没穿打底裤", en:"no leggings"}, {zh:"没穿围裙", en:"no apron"},
+      {zh:"没穿泳衣", en:"no swimsuit"}, {zh:"没戴眼镜", en:"no glasses"}, {zh:"没戴帽子", en:"no hat"}
+    ]
+  },
+  {
+    name: "姿势", tags: [
+      {zh:"站立", en:"standing"}, {zh:"坐姿", en:"sitting"}, {zh:"躺", en:"lying"},
+      {zh:"仰卧", en:"on back"}, {zh:"俯卧", en:"on stomach"}, {zh:"四肢着地", en:"all fours"},
+      {zh:"跪", en:"kneeling"}, {zh:"蹲", en:"squatting"}, {zh:"抬腿", en:"legs up"},
+      {zh:"单脚站", en:"standing on one leg"}, {zh:"翘腿", en:"crossed legs"},
+      {zh:"劈叉", en:"split"}, {zh:"站立劈叉", en:"standing split"}, {zh:"竖向劈叉", en:"vertical split"}, {zh:"单腿抬起", en:"one leg raised"}, {zh:"腿张开", en:"legs apart"}, {zh:"举手", en:"arms up"},
+      {zh:"手背身后", en:"arms behind back"}, {zh:"叉腰", en:"hand on hip"},
+      {zh:"看向镜头", en:"looking at viewer"}, {zh:"回头看", en:"looking back"}, {zh:"背面", en:"from behind"},
+      {zh:"俯视", en:"from above"}, {zh:"仰视", en:"from below"}, {zh:"全身", en:"full body"},
+      {zh:"上半身", en:"upper body"}, {zh:"特写", en:"close-up"}, {zh:"侧脸", en:"profile"},
+      {zh:"歪头", en:"head tilt"}, {zh:"坐桌上", en:"on desk"}, {zh:"腿朝镜头", en:"legs toward viewer"},
+      {zh:"足部特写", en:"foot focus"}, {zh:"脚趾", en:"toes"}, {zh:"踮脚", en:"tiptoe"},
+      {zh:"蜷脚趾", en:"curled toes"}, {zh:"并脚", en:"feet together"}, {zh:"抬脚", en:"raised foot"},
+      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"透视缩短", en:"foreshortening"}
+    ]
+  },
+  {
+    name: "场景", tags: [
+      {zh:"室内", en:"indoors"}, {zh:"室外", en:"outdoors"}, {zh:"卧室", en:"bedroom"},
+      {zh:"浴室", en:"bathroom"}, {zh:"教室", en:"classroom"}, {zh:"海边", en:"beach"},
+      {zh:"森林", en:"forest"}, {zh:"夜晚", en:"night"}, {zh:"日落", en:"sunset"},
+      {zh:"雨天", en:"rain"}, {zh:"雪", en:"snow"}, {zh:"水中", en:"water"},
+      {zh:"天空", en:"sky"}, {zh:"窗边", en:"window"}, {zh:"床", en:"bed"},
+      {zh:"简单背景", en:"simple background"}, {zh:"白背景", en:"white background"}, {zh:"渐变背景", en:"gradient background"},
+      {zh:"风景", en:"scenery"}, {zh:"城市", en:"cityscape"},
+      {zh:"天台", en:"rooftop"}, {zh:"公园", en:"park"}, {zh:"街道", en:"street"},
+      {zh:"泳池", en:"pool"}, {zh:"图书馆", en:"library"}, {zh:"厨房", en:"kitchen"},
+      {zh:"草地", en:"meadow"}, {zh:"废墟", en:"ruins"}, {zh:"水下", en:"underwater"},
+      {zh:"温泉", en:"onsen"}, {zh:"医院", en:"hospital"},
+      {zh:"课桌", en:"school desk"}, {zh:"黑板", en:"blackboard"}, {zh:"粉笔字", en:"chalk writing"},
+      {zh:"窗帘", en:"curtains"},
+      {zh:"客厅", en:"living room"}, {zh:"饭厅", en:"dining room"}, {zh:"办公室", en:"office"},
+      {zh:"走廊", en:"corridor"}, {zh:"楼梯", en:"stairs"}, {zh:"更衣室", en:"locker room"},
+      {zh:"体育馆", en:"gymnasium"}, {zh:"阁楼", en:"attic"}, {zh:"地下室", en:"basement"},
+      {zh:"咖啡店", en:"cafe"}, {zh:"餐馆", en:"restaurant"}, {zh:"酒吧", en:"bar"},
+      {zh:"夜店", en:"nightclub"}, {zh:"商店", en:"store"}, {zh:"便利店", en:"convenience store"},
+      {zh:"书店", en:"bookstore"}, {zh:"博物馆", en:"museum"}, {zh:"电影院", en:"movie theater"},
+      {zh:"舞台", en:"stage"}, {zh:"游乐园", en:"amusement park"}, {zh:"摩天轮", en:"ferris wheel"},
+      {zh:"水族馆", en:"aquarium"},
+      {zh:"神社", en:"shrine"}, {zh:"教堂", en:"church"}, {zh:"城堡", en:"castle"},
+      {zh:"宫殿", en:"palace"}, {zh:"桥", en:"bridge"}, {zh:"码头", en:"pier"},
+      {zh:"港口", en:"harbor"}, {zh:"山", en:"mountain"}, {zh:"沙漠", en:"desert"},
+      {zh:"洞穴", en:"cave"}, {zh:"瀑布", en:"waterfall"}, {zh:"河流", en:"river"},
+      {zh:"湖泊", en:"lake"}, {zh:"花园", en:"garden"}, {zh:"庭院", en:"courtyard"},
+      {zh:"阳台", en:"balcony"}, {zh:"悬崖", en:"cliff"}, {zh:"草原", en:"grassland"},
+      {zh:"竹林", en:"bamboo forest"}, {zh:"樱花", en:"cherry blossoms"},
+      {zh:"车站", en:"train station"}, {zh:"火车内", en:"train interior"}, {zh:"车内", en:"car interior"}
+    ]
+  },
+  {
+    name: "构图镜头", tags: [
+      {zh:"半身", en:"cowboy shot"}, {zh:"斜角", en:"dutch angle"}, {zh:"广角", en:"wide shot"},
+      {zh:"肖像", en:"portrait"}, {zh:"鸟瞰", en:"bird's eye view"}, {zh:"过肩", en:"over-the-shoulder"},
+      {zh:"横构图", en:"landscape"},
+      {zh:"竖构图", en:"vertical"}, {zh:"中景", en:"medium shot"}, {zh:"全景", en:"full shot"},
+      {zh:"对称构图", en:"symmetry"}, {zh:"中心构图", en:"centered composition"}, {zh:"三分法", en:"rule of thirds"},
+      {zh:"留白", en:"negative space"}, {zh:"对角线构图", en:"diagonal composition"}, {zh:"长焦", en:"telephoto"},
+      {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}
+    ]
+  },
+  {
+    name: "视角", tags: [
+      {zh:"看向别处", en:"looking away"}, {zh:"抬头看", en:"looking up"}, {zh:"低头看", en:"looking down"},
+      {zh:"侧面", en:"from side"}, {zh:"正面", en:"seen from front"}, {zh:"四分之三侧", en:"three-quarter view"},
+      {zh:"正俯视", en:"top-down"}, {zh:"极端仰视", en:"worm's eye view"}, {zh:"高角度", en:"high angle"},
+      {zh:"低角度", en:"low angle"}, {zh:"第一人称", en:"first-person view"}, {zh:"主观视角", en:"pov"},
+      {zh:"第一人称手", en:"pov hands"}, {zh:"镜头前的手", en:"hands from viewer"}
+    ]
+  },
+  {
+    name: "特写", tags: [
+      {zh:"脸部特写", en:"face focus"}, {zh:"胸部特写", en:"breast focus"}, {zh:"臀部特写", en:"ass focus"},
+      {zh:"下体特写", en:"pussy focus"}, {zh:"肚脐特写", en:"navel focus"}, {zh:"腋下特写", en:"armpit focus"},
+      {zh:"大腿特写", en:"thigh focus"}, {zh:"手部特写", en:"hand focus"}, {zh:"股间特写", en:"crotch focus"}, {zh:"脚底", en:"sole"}, {zh:"双脚底", en:"soles"},
+      {zh:"脚底特写", en:"sole focus"}, {zh:"脚趾特写", en:"toe focus"},
+      {zh:"腹部特写", en:"stomach focus"}, {zh:"微距", en:"macro"}, {zh:"极特写", en:"extreme close-up"},
+      {zh:"乳沟特写", en:"cleavage focus"}, {zh:"嘴唇特写", en:"lips focus"},
+      {zh:"眼睛特写", en:"eye focus"}, {zh:"嘴部特写", en:"mouth focus"},
+      {zh:"颈部特写", en:"neck focus"}, {zh:"锁骨特写", en:"collarbone focus"},
+      {zh:"背部特写", en:"back focus"}, {zh:"胯部特写", en:"hip focus"},
+      {zh:"腰部特写", en:"waist focus"}, {zh:"肚腩特写", en:"belly focus"},
+      {zh:"腿部特写", en:"leg focus"}, {zh:"肩部特写", en:"shoulder focus"}
+    ]
+  },
+  {
+    name: "镜头特效", tags: [
+      {zh:"镜头光晕", en:"lens flare"}, {zh:"泛光", en:"bloom"}, {zh:"运动模糊", en:"motion blur"},
+      {zh:"暗角", en:"vignette"}, {zh:"色差", en:"chromatic aberration"}, {zh:"鱼眼", en:"fish-eye"},
+      {zh:"颗粒", en:"film grain"}, {zh:"柔焦", en:"soft focus"}, {zh:"浅景深", en:"shallow depth of field"},
+      {zh:"光斑", en:"light leaks"}, {zh:"光晕", en:"halation"}, {zh:"扫描线", en:"scanlines"},
+      {zh:"眩光", en:"glare"}, {zh:"双重曝光", en:"double exposure"}, {zh:"鬼影", en:"ghosting"}
+    ]
+  },
+  {
+    name: "时间天气", tags: [
+      {zh:"白天", en:"day"}, {zh:"正午", en:"noon"}, {zh:"黄昏", en:"dusk"},
+      {zh:"日出", en:"sunrise"}, {zh:"月光", en:"moonlight"}, {zh:"星空", en:"starry sky"},
+      {zh:"多云", en:"cloudy"}, {zh:"雾", en:"fog"}, {zh:"彩虹", en:"rainbow"},
+      {zh:"清晨", en:"morning"}, {zh:"傍晚", en:"evening"}, {zh:"黎明", en:"dawn"},
+      {zh:"暴风雨", en:"storm"}, {zh:"雷电", en:"lightning"}, {zh:"极光", en:"aurora"},
+      {zh:"阴天", en:"overcast"}, {zh:"晴天", en:"clear sky"}, {zh:"下雪", en:"snowing"}
+    ]
+  },
+  {
+    name: "非人特征", tags: [
+      {zh:"翅膀", en:"wings"}, {zh:"光环", en:"halo"}, {zh:"精灵耳", en:"elf ears"},
+      {zh:"犬耳", en:"dog ears"}, {zh:"狐耳", en:"fox ears"}, {zh:"恶魔角", en:"demon horns"},
+      {zh:"獠牙", en:"fangs"}, {zh:"魔物娘", en:"monster girl"},
+      {zh:"恶魔翅膀", en:"demon wings"}, {zh:"天使翅膀", en:"angel wings"}, {zh:"龙角", en:"dragon horns"},
+      {zh:"龙尾", en:"dragon tail"}, {zh:"狐尾", en:"fox tail"}, {zh:"犬尾", en:"dog tail"},
+      {zh:"鳞片", en:"scales"}, {zh:"机械臂", en:"mechanical arm"}, {zh:"义肢", en:"prosthetic"},
+      {zh:"机械人", en:"android"}
+    ]
+  },
+  {
+    name: "种族原型", tags: [
+      {zh:"狐娘", en:"fox girl"}, {zh:"兔娘", en:"bunny girl"},
+      {zh:"天使", en:"angel"}, {zh:"恶魔", en:"demon"}, {zh:"吸血鬼", en:"vampire"},
+      {zh:"魅魔", en:"succubus"}, {zh:"女巫", en:"witch"}, {zh:"精灵", en:"fairy"},
+      {zh:"人鱼", en:"mermaid"}, {zh:"幽灵", en:"ghost"}, {zh:"鬼", en:"oni"},
+      {zh:"龙娘", en:"dragon girl"}, {zh:"狼娘", en:"wolf girl"}, {zh:"精灵族", en:"elf"},
+      {zh:"暗精灵", en:"dark elf"}, {zh:"女神", en:"goddess"}, {zh:"妖怪", en:"yokai"},
+      {zh:"僵尸", en:"zombie"}, {zh:"机械娘", en:"robot girl"}, {zh:"巫妖", en:"lich"},
+      {zh:"天狗", en:"tengu"}
+    ]
+  },
+  {
+    name: "物品道具", tags: [
+      {zh:"剑", en:"sword"}, {zh:"枪", en:"gun"}, {zh:"伞", en:"umbrella"},
+      {zh:"书", en:"book"}, {zh:"手机", en:"phone"}, {zh:"相机", en:"camera"},
+      {zh:"花", en:"flower"}, {zh:"气球", en:"balloon"}, {zh:"武器", en:"weapon"},
+      {zh:"刀", en:"knife"},
+      {zh:"法杖", en:"staff"}, {zh:"盾牌", en:"shield"}, {zh:"长枪", en:"spear"},
+      {zh:"斧头", en:"axe"}, {zh:"镰刀", en:"scythe"}, {zh:"魔杖", en:"magic wand"},
+      {zh:"戒指", en:"ring"}, {zh:"项链", en:"necklace"}, {zh:"耳环", en:"earrings"},
+      {zh:"皇冠", en:"crown"}, {zh:"王冠", en:"tiara"}, {zh:"吉他", en:"guitar"},
+      {zh:"麦克风", en:"microphone"}, {zh:"镜子", en:"mirror"}, {zh:"蜡烛", en:"candle"},
+      {zh:"扇子", en:"fan"}, {zh:"十字架", en:"cross"}, {zh:"灯笼", en:"lantern"},
+      {zh:"匕首", en:"dagger"}, {zh:"锤子", en:"hammer"}, {zh:"链锯", en:"chainsaw"},
+      {zh:"手雷", en:"grenade"}, {zh:"步枪", en:"rifle"}, {zh:"手枪", en:"handgun"},
+      {zh:"弓箭", en:"bow (weapon)"}, {zh:"箭", en:"arrow"},
+      {zh:"钢琴", en:"piano"}, {zh:"小提琴", en:"violin"}, {zh:"笛子", en:"flute"}, {zh:"鼓", en:"drum"},
+      {zh:"笔记本", en:"laptop"}, {zh:"平板", en:"tablet"}, {zh:"电视", en:"tv"}, {zh:"游戏手柄", en:"game controller"},
+      {zh:"苹果", en:"apple"}, {zh:"蛋糕", en:"cake"}, {zh:"冰淇淋", en:"ice cream"}, {zh:"棒棒糖", en:"lollipop"},
+      {zh:"咖啡", en:"coffee"}, {zh:"啤酒", en:"beer"},
+      {zh:"钥匙", en:"key"}, {zh:"锁链", en:"chain"}, {zh:"火炬", en:"torch"}, {zh:"手表", en:"watch"},
+      {zh:"时钟", en:"clock"}, {zh:"枕头", en:"pillow"}, {zh:"毯子", en:"blanket"},
+      {zh:"笔", en:"pen"}, {zh:"剪刀", en:"scissors"},
+      {zh:"泰迪熊", en:"teddy bear"}
+    ]
+  },
+  {
+    name: "负面（放负向 prompt）", tags: [
+      {zh:"最差画质", en:"worst quality"}, {zh:"低画质", en:"low quality"}, {zh:"差解剖", en:"bad anatomy"},
+      {zh:"差手", en:"bad hands"}, {zh:"差脚", en:"bad feet"}, {zh:"多指", en:"extra fingers"},
+      {zh:"缺指", en:"missing fingers"}, {zh:"并指", en:"fused fingers"}, {zh:"多腿", en:"extra legs"}, {zh:"多脚", en:"extra feet"}, {zh:"多脚趾", en:"extra toes"}, {zh:"差脚趾", en:"bad toes"},
+      {zh:"多臂", en:"extra arms"}, {zh:"畸形肢体", en:"malformed limbs"}, {zh:"比例差", en:"bad proportions"},
+      {zh:"差脸", en:"bad face"}, {zh:"脸扭曲", en:"distorted face"}, {zh:"斗鸡眼", en:"cross-eyed"},
+      {zh:"模糊", en:"blurry"}, {zh:"压缩伪影", en:"jpeg artifacts"}, {zh:"水印", en:"watermark"},
+      {zh:"文字", en:"text"}, {zh:"签名", en:"signature"}, {zh:"平涂", en:"flat color"},
+      {zh:"平光", en:"flat lighting"}, {zh:"赛璐璐", en:"cel shading"},
+      {zh:"猫耳", en:"cat ears"}, {zh:"兽耳", en:"animal ears"}, {zh:"猫娘", en:"cat girl"},
+      {zh:"猫尾", en:"cat tail"}, {zh:"猫耳(日文)", en:"nekomimi"}, {zh:"兽耳绒毛", en:"animal ear fluff"}, {zh:"马赛克", en:"mosaic censoring"},
+      {zh:"手指错乱", en:"wrong fingers"}, {zh:"畸形手", en:"mutated hands"},
+      {zh:"差下体", en:"bad pussy"}, {zh:"差肛门", en:"bad anus"}, {zh:"差乳头", en:"bad nipples"},
+      {zh:"差胸部", en:"bad breasts"}, {zh:"差阴茎", en:"bad penis"}, {zh:"差阴蒂", en:"bad clitoris"}, {zh:"差阴唇", en:"bad labia"},
+      {zh:"下体畸形", en:"deformed pussy"}, {zh:"肛门畸形", en:"deformed anus"}, {zh:"乳头畸形", en:"deformed nipples"}, {zh:"生殖器畸形", en:"malformed genitals"},
+      {zh:"多乳头", en:"extra nipples"}, {zh:"多肛门", en:"extra anus"},
+      {zh:"低分辨率", en:"lowres"}, {zh:"儿童", en:"child"},
+      {zh:"多视角", en:"multiple views"}, {zh:"角色设定图", en:"character sheet"}, {zh:"参考图", en:"reference sheet"},
+      {zh:"漫画", en:"comic"}, {zh:"漫画页", en:"manga"}, {zh:"四格漫画", en:"4koma"},
+      {zh:"分镜", en:"storyboard"}, {zh:"分屏", en:"split screen"}, {zh:"多格", en:"multiple panels"},
+      {zh:"对话气泡", en:"speech bubble"}, {zh:"边框", en:"border"}, {zh:"白边", en:"white border"},
+      {zh:"加框", en:"framed"}, {zh:"轮廓线", en:"outline"}, {zh:"格子布局", en:"panel layout"}, {zh:"Q版", en:"chibi"},
+      {zh:"单男", en:"1boy"}, {zh:"男性", en:"male"}, {zh:"男人", en:"man"}, {zh:"多男", en:"multiple boys"},
+      {zh:"阴茎", en:"penis"}, {zh:"勃起", en:"erection"}, {zh:"睾丸", en:"testicles"}, {zh:"扶他", en:"futanari"}
+    ]
+  },
+  {
+    name: "NSFW（成人标签）", tags: [
+      {zh:"全裸", en:"nude"}, {zh:"完全裸体", en:"completely nude"}, {zh:"露胸", en:"breasts"},
+      {zh:"乳头", en:"nipples"}, {zh:"下体", en:"pussy"}, {zh:"张开腿", en:"spread legs"},
+      {zh:"无内裤", en:"no panties"}, {zh:"内裤露出", en:"panty peek"}, {zh:"后入", en:"doggystyle"},
+      {zh:"传教士", en:"missionary"}, {zh:"骑乘", en:"cowgirl position"}, {zh:"乳交", en:"paizuri"},
+      {zh:"口交", en:"blowjob"}, {zh:"手交", en:"handjob"}, {zh:"性交", en:"sex"},
+      {zh:"精液", en:"cum"}, {zh:"射入", en:"cum in pussy"}, {zh:"打码", en:"censored"}, {zh:"无码", en:"uncensored"},
+      {zh:"俯视角度", en:"top-down bottom-up"}, {zh:"股缝", en:"crotch seam"}, {zh:"乳晕", en:"areolae"},
+      {zh:"凸乳晕", en:"puffy nipples"}, {zh:"阴毛", en:"pubic hair"}, {zh:"剃毛", en:"shaved"},
+      {zh:"肛交", en:"anal"}, {zh:"足交", en:"footjob"}, {zh:"腿交", en:"thigh sex"},
+      {zh:"69式", en:"sixty-nine"}, {zh:"反向骑乘", en:"reverse cowgirl"}, {zh:"站立性交", en:"standing sex"},
+      {zh:"中出", en:"nakadashi"}, {zh:"外溢", en:"creampie"}, {zh:"颜射", en:"cum on face"}, {zh:"口爆", en:"cum in mouth"},
+      {zh:"触手", en:"tentacles"}, {zh:"振动棒", en:"vibrator"}, {zh:"假阳具", en:"dildo"},
+      {zh:"性玩具", en:"sex toy"}, {zh:"束缚", en:"bondage"}, {zh:"事后", en:"after sex"},
+      {zh:"轻度暗示", en:"suggestive"}, {zh:"内射", en:"internal cum"},
+      {zh:"播种式", en:"mating press"}, {zh:"侧入式", en:"spoon position"}, {zh:"亚马逊式", en:"amazon position"}, {zh:"打桩式", en:"piledriver"},
+      {zh:"全尼尔森", en:"full nelson"}, {zh:"站立后入", en:"standing doggystyle"}, {zh:"俯卧后入", en:"prone bone"}, {zh:"推车式", en:"wheelbarrow"},
+      {zh:"悬空式", en:"suspension"}, {zh:"坐莲式", en:"lotus position"}, {zh:"坐脸", en:"facesitting"}, {zh:"剪刀式", en:"scissoring"},
+      {zh:"3P", en:"threesome"}, {zh:"双插", en:"double penetration"}, {zh:"自慰", en:"masturbation"}, {zh:"指交", en:"fingering"}, {zh:"阿黑颜", en:"ahegao"}, {zh:"上翻眼", en:"crossed eyes"},
+      {zh:"揉胸", en:"breast grab"}, {zh:"挤胸", en:"breast squeeze"},
+      {zh:"自揉胸", en:"grabbing own breast"}, {zh:"被揉胸", en:"grabbing another's breast"},
+      {zh:"抚胸", en:"breast fondling"}, {zh:"手放胸口", en:"hands on own chest"},
+      {zh:"捏乳头", en:"nipple pinch"}, {zh:"拉乳头", en:"nipple pull"},
+      {zh:"第一人称插入", en:"pov penetration"}, {zh:"手指含嘴", en:"finger in mouth"},
+      {zh:"肛门", en:"anus"}, {zh:"脱肛", en:"prolapse"}, {zh:"肛门珠", en:"anal beads"},
+      {zh:"肛塞", en:"anal plug"}, {zh:"灌肠", en:"enema"},
+      {zh:"修剪阴毛", en:"trimmed pubic hair"}, {zh:"腹部毛", en:"happy trail"},
+      {zh:"阴唇", en:"labia"}, {zh:"骆驼趾", en:"cameltoe"}, {zh:"肥厚阴部", en:"puffy pussy"},
+      {zh:"内阴部", en:"innie pussy"}, {zh:"外阴部", en:"outie pussy"}, {zh:"阴唇张开", en:"labia spread"},
+      {zh:"浓密阴毛", en:"bushy pubic hair"}, {zh:"阴毛茬", en:"pubic stubble"}, {zh:"多毛", en:"hairy"},
+      {zh:"馒头型", en:"mound pussy"}, {zh:"蝴蝶型", en:"butterfly pussy"}, {zh:"一线天", en:"slit pussy"},
+      {zh:"鲍鱼型", en:"abalone pussy"}, {zh:"白虎", en:"bald pussy"},
+      {zh:"阴蒂", en:"clitoris"}, {zh:"阴蒂特写", en:"clitoris focus"}, {zh:"阴蒂包皮", en:"clitoral hood"},
+      {zh:"勃起阴蒂", en:"erect clitoris"}, {zh:"刺激阴蒂", en:"clit stimulation"},
+      {zh:"内陷乳头", en:"inverted nipples"}, {zh:"乳环", en:"nipple piercings"},
+      {zh:"日式绳缚", en:"shibari"}, {zh:"四马攒蹄", en:"hogtie"}, {zh:"蛙绑", en:"frogtie"},
+      {zh:"反手吊绑", en:"strappado"}, {zh:"直立绑", en:"upright"}, {zh:"木乃伊式", en:"mummification"},
+      {zh:"分腿杆", en:"spreader bar"}, {zh:"手腕并绑", en:"wrists together"}, {zh:"手绑头顶", en:"arms above head"},
+      {zh:"胸部束缚", en:"chest harness"}, {zh:"胸部绳缚", en:"breast bondage"}, {zh:"股绳", en:"crotch rope"},
+      {zh:"双腿并绑", en:"legs together"}, {zh:"手铐", en:"handcuffs"}, {zh:"口球", en:"ball gag"},
+      {zh:"蒙眼", en:"blindfold"}, {zh:"胶带", en:"tape"},
+      {zh:"红绳", en:"red rope"}, {zh:"手指入穴", en:"fingers in pussy"},
+      {zh:"爱液", en:"pussy juice"}, {zh:"潮吹", en:"squirting"}, {zh:"下体张开", en:"gaping pussy"},
+      {zh:"扒开下体", en:"spread pussy"}, {zh:"阴道插入", en:"vaginal penetration"}, {zh:"下体露出", en:"pussy peek"},
+      {zh:"子宫颈", en:"cervix"}, {zh:"阴道", en:"vaginal"}
+    ]
+  }
+];
+
+// 语义分组排序：每个分类内按子类分组（裙子和裙子、袜子和袜子放一起），组内按拼音
+const GROUP_ORDER = {
+  "服装": ["headdress", "dress", "skirt", "petticoat", "uniform", "maid", "nurse", "school", "sailor", "military", "doctor", "police", "flight attendant", "office lady", "tuxedo", "bunny suit", "apron", "swimsuit", "bikini", "lingerie", "bra", "panties", "shirt", "t-shirt", "sweater", "hoodie", "jacket", "coat", "camisole", "off-shoulder", "strapless", "sleeveless", "detached sleeves", "puffy sleeves", "pantyhose", "thighhighs", "stockings", "kneehighs", "garter", "see-through", "heels", "boots", "sandals", "shoes", "loafers", "geta", "barefoot", "no shoes", "anklet", "toe ring", "tabi", "hat", "veil", "ears", "kimono", "cheongsam", "yukata", "armor", "lolita", "gothic", "frills", "lace", "glasses", "eyepatch", "choker", "neck bell", "gloves", "bow", "ribbon", "horns", "tail", "headphones", "miko", "stethoscope", "nightgown", "pajamas", "sportswear", "bloomers", "winter clothes", "layered clothes", "sheer", "bouquet"],
+  "场景": ["bedroom", "bathroom", "classroom", "kitchen", "living room", "dining room", "office", "corridor", "attic", "basement", "locker room", "gymnasium", "hospital", "library", "museum", "movie theater", "stage", "convenience store", "bookstore", "store", "cafe", "restaurant", "bar", "nightclub", "amusement park", "ferris wheel", "aquarium", "pool", "beach", "bamboo forest", "forest", "mountain", "desert", "cave", "waterfall", "river", "lake", "garden", "courtyard", "meadow", "grassland", "park", "street", "cityscape", "rooftop", "building", "bridge", "pier", "harbor", "train station", "train interior", "car interior", "shrine", "church", "castle", "palace", "ruins", "onsen", "underwater", "sky", "window", "bed", "desk", "blackboard", "curtains", "balcony", "cliff", "stair"],
+  "身体": ["breasts", "chest", "nipples", "collarbone", "waist", "hips", "butt", "ass", "thigh", "legs", "feet", "toe", "ankle", "heel", "calf", "arms", "hands", "pale skin", "skin", "tanned", "mole", "freckles", "sweat", "abs", "muscles", "pregnant"],
+  "眼睛": ["eyes", "pupils", "eyelashes", "eyebrows"],
+  "物品道具": ["sword", "gun", "weapon", "knife", "dagger", "spear", "axe", "scythe", "shield", "staff", "wand", "bow (weapon)", "arrow", "piano", "guitar", "violin", "flute", "drum", "microphone", "phone", "camera", "laptop", "tablet", "tv", "game controller", "book", "pen", "scissors", "apple", "cake", "ice cream", "lollipop", "coffee", "beer", "flower", "balloon", "umbrella", "key", "chain", "torch", "watch", "clock", "pillow", "blanket", "mirror", "candle", "lantern", "fan", "ring", "necklace", "earrings", "crown", "tiara", "cross", "teddy bear"]
+};
+
+function tagGroup(catName, en) {
+  const groups = GROUP_ORDER[catName];
+  if (!groups) return 999999;
+  const i = groups.findIndex(k => en.toLowerCase().indexOf(k) !== -1);
+  return i === -1 ? 999999 : i;
+}
+CATEGORIES.forEach(c => c.tags.sort((a, b) => {
+  const ga = tagGroup(c.name, a.en), gb = tagGroup(c.name, b.en);
+  if (ga !== gb) return ga - gb;
+  return (a.zh || a.en).localeCompare(b.zh || b.en, 'zh');
+}));
+
+// ============ 状态与渲染 ============
+const selected = []; // 已选英文 tag（按选择顺序）
+const weights = {};   // en -> 权重（默认 1.0，输出 (tag:1.2)）
+const WEIGHT_STEPS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
+const extraNeg = [];  // 服装套装的负向标签（附加到负面框，不进选中态）
+const negativeEn = new Set();
+CATEGORIES.forEach(c => { if (c.name.indexOf("负面") === 0) c.tags.forEach(t => negativeEn.add(t.en)); });
+const customNegEn = new Set(); // 自定义负向触发词
+function isNeg(en) { return negativeEn.has(en) || customNegEn.has(en); }
+function rebuildCustomNeg() { customNegEn.clear(); customTags.forEach(t => { if (t.neg) customNegEn.add(t.en); }); }
+
+// 冲突/冗余互斥组（组内同时选中 2+ 个即告警）
+const CONFLICT_GROUPS = [
+  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair"] },
+  { name: "发长", tags: ["long hair","very long hair","medium hair","short hair"] },
+  { name: "眼色", tags: ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes"] },
+  { name: "室内外", tags: ["indoors","outdoors"] },
+  { name: "时间", tags: ["day","night","noon","dusk","sunrise","sunset","moonlight"] },
+  { name: "画风", tags: ["anime","semi-realistic","realistic"] },
+  { name: "姿势", tags: ["standing","sitting","lying","kneeling","squatting"] },
+  { name: "肤色", tags: ["pale skin","tanned","dark skin"] },
+  { name: "胸围", tags: ["flat chest","small breasts","medium breasts","large breasts","huge breasts"] },
+  { name: "女性人数", tags: ["1girl","2girls","multiple girls"] },
+  { name: "男性人数", tags: ["1boy","multiple boys"] },
+  { name: "打码状态", tags: ["censored","uncensored"] },
+  { name: "裸体状态", tags: ["nude","completely nude"] },
+  { name: "丝袜颜色", tags: ["black pantyhose","white pantyhose","nude pantyhose"] },
+  { name: "洛丽塔类型", tags: ["sweet lolita","gothic lolita","classic lolita"] },
+  { name: "景别", tags: ["full body","upper body","cowboy shot","close-up","portrait","extreme close-up"] },
+  { name: "画幅", tags: ["landscape","vertical"] },
+  { name: "视角方向", tags: ["from side","seen from front","three-quarter view"] },
+  { name: "高低角度", tags: ["high angle","low angle","top-down","worm's eye view","bird's eye view"] },
+];
+
+// 内置服装套装（点应用把整套加进选择，含负向排除）
+const OUTFITS = [
+  { name: "护士服", pos: ["nurse","nurse cap","white dress","stethoscope","hospital"], neg: ["maid","school uniform"], w: {nurse:1.3} },
+  { name: "女仆装", pos: ["maid","maid headdress","apron","frilled dress"], neg: [], w: {maid:1.3} },
+  { name: "校服", pos: ["school uniform","sailor uniform","pleated skirt","thighhighs"], neg: [], w: {} },
+  { name: "旗袍", pos: ["cheongsam","high heels"], neg: [], w: {cheongsam:1.3} },
+  { name: "和服", pos: ["kimono","hair ornament","geta"], neg: [], w: {kimono:1.3} },
+  { name: "兔女郎", pos: ["bunny suit","bunny ears","high heels","pantyhose"], neg: [], w: {} },
+  { name: "泳装", pos: ["swimsuit","bikini","beach"], neg: [], w: {} },
+  { name: "军装", pos: ["military uniform","hat","gloves","boots"], neg: [], w: {} },
+  { name: "婚纱", pos: ["wedding dress","veil","bouquet"], neg: [], w: {} },
+  { name: "巫女服", pos: ["miko","hair ribbon","white dress"], neg: [], w: {} },
+];
+
+// 内置快捷模板（点击清空当前选中并套用整套）
+const TEMPLATES = [
+  { name: "全身立绘", pos: ["masterpiece","best quality","1girl","solo","full body","standing","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
+  { name: "头像特写", pos: ["masterpiece","best quality","1girl","solo","close-up","face focus","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
+  { name: "半身照", pos: ["masterpiece","best quality","1girl","solo","upper body","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
+  { name: "NSFW裸体", pos: ["masterpiece","best quality","1girl","solo","completely nude","spread legs","blush","looking at viewer"], neg: ["loli","child"], w: {masterpiece:1.2, "best quality":1.2} },
+];
+const mainEl = document.getElementById("categories");
+const resultPosEl = document.getElementById("result-pos");
+const resultNegEl = document.getElementById("result-neg");
+const countEl = document.getElementById("count");
+const searchEl = document.getElementById("search");
+
+// 自定义标签（localStorage 持久化，刷新不丢）
+const CUSTOM_KEY = "pg_custom_tags";
+let customTags = [];
+try { customTags = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]"); } catch (e) { customTags = []; }
+
+// LoRA 触发词（localStorage 持久化，与普通标签分开）
+const TRIGGER_KEY = "pg_trigger_words";
+let triggerWords = [];
+try { triggerWords = JSON.parse(localStorage.getItem(TRIGGER_KEY) || "[]"); } catch (e) { triggerWords = []; }
+
+// 迁移旧数据：无分类的自定义标签视为 LoRA 触发词
+customTags = customTags.filter(t => {
+  if (!t.cat) { if (!triggerWords.some(x => x.en === t.en)) triggerWords.push({ zh: t.zh || "", en: t.en }); return false; }
+  return true;
+});
+try { localStorage.setItem(TRIGGER_KEY, JSON.stringify(triggerWords)); } catch (e) {}
+
+rebuildCustomNeg();
+function saveCustom() { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customTags)); } catch (e) {} }
+function saveTriggers() { try { localStorage.setItem(TRIGGER_KEY, JSON.stringify(triggerWords)); } catch (e) {} }
+
+// 预设（localStorage 持久化）
+const PRESET_KEY = "pg_presets";
+let presets = [];
+try { presets = JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); } catch (e) { presets = []; }
+function savePresets() { try { localStorage.setItem(PRESET_KEY, JSON.stringify(presets)); } catch (e) {} }
+
+// 自定义服装套装（localStorage 持久化）
+const CUSTOM_OUTFITS_KEY = "pg_custom_outfits";
+let customOutfits = [];
+try { customOutfits = JSON.parse(localStorage.getItem(CUSTOM_OUTFITS_KEY) || "[]"); } catch (e) { customOutfits = []; }
+function saveCustomOutfits() { try { localStorage.setItem(CUSTOM_OUTFITS_KEY, JSON.stringify(customOutfits)); } catch (e) {} }
+
+// 自定义快捷模板（localStorage 持久化）
+const CUSTOM_TEMPLATES_KEY = "pg_custom_templates";
+let customTemplates = [];
+try { customTemplates = JSON.parse(localStorage.getItem(CUSTOM_TEMPLATES_KEY) || "[]"); } catch (e) { customTemplates = []; }
+function saveCustomTemplates() { try { localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(customTemplates)); } catch (e) {} }
+
+// 收藏（localStorage 持久化）
+const FAV_KEY = "pg_favorites";
+let favorites = [];
+try { favorites = JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); } catch (e) { favorites = []; }
+function saveFavorites() { try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch (e) {} }
+function toggleFavorite(en) {
+  const i = favorites.indexOf(en);
+  if (i >= 0) favorites.splice(i, 1); else favorites.push(en);
+  saveFavorites();
+  renderFavoriteSection();
+  updateSuggestions(searchEl.value);
+}
+
+function toggleTag(en) {
+  snapshot();
+  const i = selected.indexOf(en);
+  if (i >= 0) { selected.splice(i, 1); delete weights[en]; }
+  else { insertSorted(en); }
+  render();
+}
+
+// 滑动选择：按住左键在标签上滑过，连续选中/取消
+let dragMode = null; // 'select' | 'deselect' | null
+
+function setTag(en, on) {
+  const has = selected.includes(en);
+  if (has === on) return;
+  if (on) { insertSorted(en); }
+  else { const i = selected.indexOf(en); if (i >= 0) selected.splice(i, 1); delete weights[en]; }
+  render();
+}
+
+function beginDrag(e, en) {
+  if (e.button !== 0) return; // 只响应左键，右键留给权重
+  snapshot();
+  dragMode = selected.includes(en) ? 'deselect' : 'select';
+  setTag(en, dragMode === 'select');
+}
+
+function applyDrag(en) {
+  if (dragMode === null) return;
+  setTag(en, dragMode === 'select');
+}
+
+function endDrag() { dragMode = null; }
+document.addEventListener('mouseup', endDrag);
+
+// 按 tagRank 插入到正确位置（默认输出顺序「好看」）
+function insertSorted(en) {
+  const rank = tagRank(en);
+  let i = 0;
+  while (i < selected.length && tagRank(selected[i]) <= rank) i++;
+  selected.splice(i, 0, en);
+  weights[en] = 1.0;
+}
+
+// 历史记录（撤销/重做）
+let history = [];
+let redoStack = [];
+const MAX_HISTORY = 50;
+function snapshot() {
+  history.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  if (history.length > MAX_HISTORY) history.shift();
+  redoStack.length = 0;
+}
+function restore(st) {
+  selected.length = 0;
+  st.selected.forEach(en => selected.push(en));
+  Object.keys(weights).forEach(k => delete weights[k]);
+  Object.assign(weights, st.weights);
+  render();
+}
+function undo() {
+  if (history.length === 0) return;
+  const st = history.pop();
+  redoStack.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  restore(st);
+}
+function redo() {
+  if (redoStack.length === 0) return;
+  const st = redoStack.pop();
+  history.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  restore(st);
+}
+
+function tagRank(en) {
+  const tw = triggerWords.findIndex(t => t.en === en);
+  if (tw >= 0) return -1000 + tw; // LoRA 触发词排最前
+  for (let i = 0; i < CATEGORIES.length; i++) {
+    const cat = CATEGORIES[i];
+    const ti = cat.tags.findIndex(t => t.en === en);
+    if (ti >= 0) return 1000 + i * 100 + ti;
+    const ci = customTags.findIndex(t => t.en === en && t.cat === cat.name);
+    if (ci >= 0) return 1000 + i * 100 + cat.tags.length + ci;
+  }
+  return 99999;
+}
+
+function cycleWeight(en) {
+  if (!selected.includes(en)) return;
+  const cur = weights[en] || 1.0;
+  const idx = WEIGHT_STEPS.indexOf(cur);
+  weights[en] = WEIGHT_STEPS[(idx + 1) % WEIGHT_STEPS.length];
+  render();
+}
+
+function preciseWeight(en) {
+  if (!selected.includes(en)) return;
+  const cur = weights[en] || 1.0;
+  const input = prompt("输入权重 (0.1 ~ 3.0)：", cur);
+  if (input === null) return;
+  const v = parseFloat(input);
+  if (isNaN(v) || v <= 0) return;
+  weights[en] = Math.round(v * 100) / 100;
+  render();
+}
+
+function fmt(en) {
+  const w = weights[en] || 1.0;
+  return w !== 1.0 ? "(" + en + ":" + w.toFixed(1) + ")" : en;
+}
+
+function checkIssues() {
+  const issues = [];
+  const conflictTags = new Set();
+  CONFLICT_GROUPS.forEach(g => {
+    const hit = g.tags.filter(t => selected.includes(t));
+    if (hit.length >= 2) { issues.push("冲突【" + g.name + "】" + hit.join(" + ")); hit.forEach(t => conflictTags.add(t)); }
+  });
+  const seen = new Set();
+  const dups = [];
+  selected.forEach(en => { if (seen.has(en)) dups.push(en); else seen.add(en); });
+  if (dups.length) { issues.push("重复标签: " + [...new Set(dups)].join(", ")); dups.forEach(t => conflictTags.add(t)); }
+  return { issues, conflictTags };
+}
+
+let outputFormat = "weight";
+try { outputFormat = localStorage.getItem("pg_format") || "weight"; } catch (e) {}
+
+function fmtOutput(en) {
+  return outputFormat === "plain" ? en : fmt(en);
+}
+
+function refreshOutput() {
+  const pos = selected.filter(en => !isNeg(en)).map(fmtOutput);
+  const neg = [...selected.filter(en => isNeg(en)), ...extraNeg].sort((a, b) => tagRank(a) - tagRank(b)).map(fmtOutput);
+  resultPosEl.value = pos.join(", ");
+  resultNegEl.value = neg.join(", ");
+}
+
+function render() {
+  const { issues, conflictTags } = checkIssues();
+  refreshOutput();
+  countEl.textContent = "已选 " + selected.length;
+  mainEl.querySelectorAll(".chip[data-en]").forEach(chip => {
+    const en = chip.dataset.en;
+    chip.classList.toggle("active", selected.includes(en));
+    chip.classList.toggle("conflict", conflictTags.has(en));
+    const w = weights[en] || 1.0;
+    const label = chip.dataset.zh || en;
+    chip.textContent = (selected.includes(en) && w !== 1.0) ? label + " ×" + w.toFixed(1) : label;
+  });
+  const warnEl = document.getElementById("warnings");
+  if (issues.length) { warnEl.textContent = "⚠ " + issues.join("　|　"); warnEl.style.display = "block"; }
+  else { warnEl.style.display = "none"; }
+  renderSelectedPanel();
+}
+
+function renderSelectedPanel() {
+  const list = document.getElementById("sel-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const posTags = selected.filter(en => !isNeg(en));
+  posTags.forEach(en => {
+    const row = document.createElement("div");
+    row.className = "sel-item";
+    row.dataset.en = en;
+    const label = document.createElement("span");
+    label.className = "sel-label";
+    label.draggable = true;
+    const w = weights[en] || 1.0;
+    label.textContent = en + (w !== 1.0 ? " ×" + w.toFixed(2) : "");
+    label.title = "拖拽排序";
+    const slider = document.createElement("input");
+    slider.type = "range"; slider.min = "0.5"; slider.max = "1.5"; slider.step = "0.05";
+    slider.value = w;
+    slider.title = "权重";
+    slider.addEventListener("input", e => {
+      weights[en] = parseFloat(e.target.value);
+      label.textContent = en + (weights[en] !== 1.0 ? " ×" + weights[en].toFixed(2) : "");
+      refreshOutput();
+    });
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "del"; del.textContent = "×"; del.title = "取消选中";
+    del.addEventListener("click", () => toggleTag(en));
+    row.appendChild(label); row.appendChild(slider); row.appendChild(del);
+    label.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", en); e.dataTransfer.effectAllowed = "move"; });
+    row.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; });
+    row.addEventListener("drop", e => {
+      e.preventDefault();
+      const from = e.dataTransfer.getData("text/plain");
+      if (from === en) return;
+      const fi = selected.indexOf(from);
+      if (fi < 0) return;
+      snapshot();
+      selected.splice(fi, 1);
+      const ti = selected.indexOf(en);
+      selected.splice(ti < 0 ? selected.length : ti, 0, from);
+      render();
+    });
+    list.appendChild(row);
+  });
+}
+
+function makeTagChip(t, opts) {
+  const box = document.createElement("span");
+  if (opts.withDelete) box.className = "custom-chip";
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip";
+  b.textContent = (t.zh || t.en) + (t.neg ? " ⛔" : "");
+  b.title = t.en;
+  b.dataset.en = t.en; b.dataset.zh = t.zh || "";
+  b.addEventListener("mousedown", e => { e.preventDefault(); beginDrag(e, t.en); });
+  b.addEventListener("mouseenter", () => applyDrag(t.en));
+  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleTag(t.en); } });
+  b.addEventListener("contextmenu", e => { e.preventDefault(); (e.shiftKey ? preciseWeight(t.en) : cycleWeight(t.en)); });
+  box.appendChild(b);
+  if (opts.withDelete) {
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "del"; del.textContent = "×"; del.title = "删除";
+    del.addEventListener("click", () => opts.onDelete(t.en));
+    box.appendChild(del);
+  }
+  return box;
+}
+
+function parseTags(str) {
+  return (str || "").split(/[,，]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+}
+
+function importPrompt() {
+  const input = document.getElementById("import-input");
+  const raw = (input.value || "").trim();
+  if (!raw) return;
+  snapshot();
+  const parts = raw.split(/\s*--neg\s*/i);
+  const apply = (str, negMode) => {
+    parseTags(str).forEach(part => {
+      let tag = part, w = 1.0;
+      const wm = part.match(/^\((.+?):([\d.]+)\)$/);
+      if (wm) { tag = wm[1].trim(); w = parseFloat(wm[2]) || 1.0; }
+      if (!tag) return;
+      if (negMode) {
+        if (isNeg(tag)) {
+          if (!selected.includes(tag)) insertSorted(tag);
+        } else if (!extraNeg.includes(tag)) {
+          extraNeg.push(tag);
+        }
+        weights[tag] = w;
+      } else {
+        if (!selected.includes(tag)) insertSorted(tag);
+        weights[tag] = w;
+      }
+    });
+  };
+  apply(parts[0] || "", false);
+  apply(parts[1] || "", true);
+  input.value = "";
+  render();
+}
+
+function buildCategories() {
+  mainEl.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const customInCat = customTags.filter(t => t.cat === cat.name);
+    const details = document.createElement("details");
+    let open = false;
+    try { const saved = JSON.parse(localStorage.getItem("pg_open_state2") || "{}"); if (cat.name in saved) open = !!saved[cat.name]; } catch (e) {}
+    details.open = open;
+    details.dataset.cat = cat.name;
+    details.addEventListener("toggle", () => {
+      try {
+        const map = JSON.parse(localStorage.getItem("pg_open_state2") || "{}");
+        map[cat.name] = details.open;
+        localStorage.setItem("pg_open_state2", JSON.stringify(map));
+      } catch (e) {}
+    });
+    const summary = document.createElement("summary");
+    summary.innerHTML = "<span>" + cat.name + "</span><span class='tag-count'>" + (cat.tags.length + customInCat.length) + " 个</span>";
+    details.appendChild(summary);
+
+    const wrap = document.createElement("div");
+    wrap.className = "chips";
+    cat.tags.forEach(t => wrap.appendChild(makeTagChip(t, {})));
+    customInCat.forEach(t => wrap.appendChild(makeTagChip(t, { withDelete: true, onDelete: removeCustomTag })));
+    details.appendChild(wrap);
+    mainEl.appendChild(details);
+  });
+}
+
+function renderCustomSection() {
+  const old = document.getElementById("custom-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "custom-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>添加标签</span><span class='tag-count'>加到分类</span>";
+  details.appendChild(summary);
+
+  const row = document.createElement("div");
+  row.className = "custom-row";
+  const zhIn = document.createElement("input");
+  zhIn.id = "custom-zh"; zhIn.placeholder = "中文说明（可选）";
+  const enIn = document.createElement("input");
+  enIn.id = "custom-en"; enIn.placeholder = "英文标签，如 lolita fashion";
+  const catSel = document.createElement("select");
+  catSel.id = "custom-cat";
+  CATEGORIES.forEach(c => { const o = document.createElement("option"); o.value = c.name; o.textContent = c.name; catSel.appendChild(o); });
+  const negChk = document.createElement("input");
+  negChk.type = "checkbox"; negChk.id = "custom-neg";
+  const negLbl = document.createElement("label");
+  negLbl.htmlFor = "custom-neg"; negLbl.textContent = "负向";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "添加";
+  addBtn.addEventListener("click", addCustomTag);
+  enIn.addEventListener("keydown", e => { if (e.key === "Enter") addCustomTag(); });
+  row.appendChild(zhIn); row.appendChild(enIn); row.appendChild(catSel); row.appendChild(negChk); row.appendChild(negLbl); row.appendChild(addBtn);
+  details.appendChild(row);
+
+  const hint = document.createElement("div");
+  hint.className = "hint"; hint.style.padding = "0 16px 12px";
+  hint.textContent = "普通标签：填英文 + 选分类 → 出现在对应分类里（带 × 可删）";
+  details.appendChild(hint);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function renderTriggerSection() {
+  const old = document.getElementById("trigger-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "trigger-section";
+  details.open = true;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>LoRA 触发词</span><span class='tag-count'>" + triggerWords.length + " 个</span>";
+  details.appendChild(summary);
+
+  const row = document.createElement("div");
+  row.className = "custom-row";
+  const zhIn = document.createElement("input");
+  zhIn.id = "trigger-zh"; zhIn.placeholder = "LoRA 名称（可选）";
+  const enIn = document.createElement("input");
+  enIn.id = "trigger-en"; enIn.placeholder = "触发词，如 shatangjiang";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "添加";
+  addBtn.addEventListener("click", addTriggerWord);
+  enIn.addEventListener("keydown", e => { if (e.key === "Enter") addTriggerWord(); });
+  row.appendChild(zhIn); row.appendChild(enIn); row.appendChild(addBtn);
+  details.appendChild(row);
+
+  const wrap = document.createElement("div");
+  wrap.className = "chips";
+  if (triggerWords.length === 0) {
+    const tip = document.createElement("span");
+    tip.className = "empty-tip"; tip.style.width = "100%";
+    tip.textContent = "暂无触发词，输入 LoRA 触发词后点「添加」";
+    wrap.appendChild(tip);
+  }
+  triggerWords.forEach(t => wrap.appendChild(makeTagChip(t, { withDelete: true, onDelete: removeTriggerWord })));
+  details.appendChild(wrap);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function addTriggerWord() {
+  const zh = (document.getElementById("trigger-zh").value || "").trim();
+  const en = (document.getElementById("trigger-en").value || "").trim().toLowerCase();
+  if (!en) return;
+  if (triggerWords.some(t => t.en === en)) return;
+  triggerWords.push({ zh, en });
+  saveTriggers();
+  renderTriggerSection();
+}
+
+function removeTriggerWord(en) {
+  triggerWords = triggerWords.filter(t => t.en !== en);
+  const i = selected.indexOf(en);
+  if (i >= 0) selected.splice(i, 1);
+  saveTriggers();
+  renderTriggerSection();
+  render();
+}
+
+function addCustomTag() {
+  const zh = (document.getElementById("custom-zh").value || "").trim();
+  const en = (document.getElementById("custom-en").value || "").trim().toLowerCase();
+  const neg = document.getElementById("custom-neg").checked;
+  const cat = (document.getElementById("custom-cat").value || CATEGORIES[0].name).trim();
+  if (!en) return;
+  if (customTags.some(t => t.en === en)) return;
+  customTags.push({ zh, en, neg, cat });
+  saveCustom();
+  rebuildCustomNeg();
+  renderCustomSection();
+  buildCategories();
+  render();
+}
+
+function removeCustomTag(en) {
+  customTags = customTags.filter(t => t.en !== en);
+  const i = selected.indexOf(en);
+  if (i >= 0) selected.splice(i, 1);
+  saveCustom();
+  rebuildCustomNeg();
+  renderCustomSection();
+  buildCategories();
+  render();
+}
+
+function renderPresetSection() {
+  const old = document.getElementById("preset-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "preset-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>预设</span><span class='tag-count'>" + presets.length + " 个</span>";
+  details.appendChild(summary);
+
+  const saveRow = document.createElement("div");
+  saveRow.className = "custom-row";
+  const nameIn = document.createElement("input");
+  nameIn.id = "preset-name"; nameIn.placeholder = "预设名称，如 全身立绘";
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button"; saveBtn.className = "btn primary"; saveBtn.textContent = "保存当前";
+  saveBtn.addEventListener("click", savePreset);
+  nameIn.addEventListener("keydown", e => { if (e.key === "Enter") savePreset(); });
+  saveRow.appendChild(nameIn); saveRow.appendChild(saveBtn);
+  details.appendChild(saveRow);
+
+  const ioRow = document.createElement("div");
+  ioRow.className = "custom-row";
+  const expBtn = document.createElement("button");
+  expBtn.type = "button"; expBtn.className = "btn"; expBtn.textContent = "备份";
+  expBtn.addEventListener("click", exportConfig);
+  const impBtn = document.createElement("button");
+  impBtn.type = "button"; impBtn.className = "btn"; impBtn.textContent = "恢复";
+  impBtn.addEventListener("click", () => document.getElementById("preset-file").click());
+  const clrBtn = document.createElement("button");
+  clrBtn.type = "button"; clrBtn.className = "btn"; clrBtn.textContent = "清空预设";
+  clrBtn.addEventListener("click", () => { if (confirm("清空所有预设？")) { presets = []; savePresets(); renderPresetSection(); } });
+  const fileIn = document.createElement("input");
+  fileIn.type = "file"; fileIn.id = "preset-file"; fileIn.accept = ".json"; fileIn.style.display = "none";
+  fileIn.addEventListener("change", e => { if (e.target.files[0]) importConfig(e.target.files[0]); e.target.value = ""; });
+  ioRow.appendChild(expBtn); ioRow.appendChild(impBtn); ioRow.appendChild(clrBtn); ioRow.appendChild(fileIn);
+  details.appendChild(ioRow);
+
+  const list = document.createElement("div");
+  list.className = "chips";
+  if (presets.length === 0) {
+    const tip = document.createElement("span");
+    tip.className = "empty-tip"; tip.style.width = "100%";
+    tip.textContent = "暂无预设。选好标签后输入名称点「保存当前」";
+    list.appendChild(tip);
+  }
+  presets.forEach(p => {
+    const box = document.createElement("span");
+    box.className = "custom-chip";
+    const loadBtn = document.createElement("button");
+    loadBtn.type = "button"; loadBtn.className = "chip";
+    loadBtn.textContent = p.name + "（" + (p.pos.length + p.neg.length) + "）";
+    loadBtn.title = "点击加载该预设";
+    loadBtn.addEventListener("click", () => loadPreset(p.name));
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "del"; del.textContent = "×"; del.title = "删除预设";
+    del.addEventListener("click", () => deletePreset(p.name));
+    box.appendChild(loadBtn); box.appendChild(del);
+    list.appendChild(box);
+  });
+  details.appendChild(list);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function savePreset() {
+  const name = (document.getElementById("preset-name").value || "").trim();
+  if (!name) return;
+  const pos = selected.filter(en => !isNeg(en));
+  const neg = selected.filter(en => isNeg(en));
+  const existing = presets.find(p => p.name === name);
+  if (existing) { existing.pos = pos; existing.neg = neg; }
+  else presets.push({ name, pos, neg });
+  savePresets();
+  renderPresetSection();
+}
+
+function loadPreset(name) {
+  const p = presets.find(x => x.name === name);
+  if (!p) return;
+  snapshot();
+  selected.length = 0;
+  (p.pos || []).forEach(en => selected.push(en));
+  (p.neg || []).forEach(en => selected.push(en));
+  render();
+}
+
+function deletePreset(name) {
+  presets = presets.filter(p => p.name !== name);
+  savePresets();
+  renderPresetSection();
+}
+
+function exportConfig() {
+  const blob = new Blob([JSON.stringify({ customTags, presets, customOutfits, customTemplates, triggerWords }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "prompt_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function importConfig(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || typeof data !== "object") throw new Error("bad");
+      if (Array.isArray(data.presets)) {
+        data.presets.forEach(p => {
+          if (p && typeof p.name === "string" && Array.isArray(p.pos) && Array.isArray(p.neg)) {
+            const ex = presets.find(x => x.name === p.name);
+            if (ex) { ex.pos = p.pos; ex.neg = p.neg; }
+            else presets.push({ name: p.name, pos: p.pos, neg: p.neg });
+          }
+        });
+      }
+      if (Array.isArray(data.customTags)) {
+        data.customTags.forEach(t => {
+          if (t && typeof t.en === "string" && !customTags.some(x => x.en === t.en)) {
+            customTags.push({ zh: t.zh || "", en: t.en, neg: !!t.neg, cat: t.cat || "" });
+          }
+        });
+      }
+      if (Array.isArray(data.customOutfits)) {
+        data.customOutfits.forEach(o => {
+          if (o && typeof o.name === "string" && Array.isArray(o.pos) && Array.isArray(o.neg)) {
+            const ex = customOutfits.find(x => x.name === o.name);
+            if (ex) { ex.pos = o.pos; ex.neg = o.neg; }
+            else customOutfits.push({ name: o.name, pos: o.pos, neg: o.neg });
+          }
+        });
+      }
+      if (Array.isArray(data.customTemplates)) {
+        data.customTemplates.forEach(o => {
+          if (o && typeof o.name === "string" && Array.isArray(o.pos) && Array.isArray(o.neg)) {
+            const ex = customTemplates.find(x => x.name === o.name);
+            if (ex) { ex.pos = o.pos; ex.neg = o.neg; }
+            else customTemplates.push({ name: o.name, pos: o.pos, neg: o.neg });
+          }
+        });
+      }
+      if (Array.isArray(data.triggerWords)) {
+        data.triggerWords.forEach(t => {
+          if (t && typeof t.en === "string" && !triggerWords.some(x => x.en === t.en)) {
+            triggerWords.push({ zh: t.zh || "", en: t.en });
+          }
+        });
+      }
+      savePresets();
+      saveCustom();
+      saveCustomOutfits();
+      saveCustomTemplates();
+      saveTriggers();
+      rebuildCustomNeg();
+      renderPresetSection();
+      renderCustomSection();
+      renderTriggerSection();
+      buildCategories();
+      renderOutfitSection();
+      renderTemplateSection();
+      render();
+    } catch (e) { alert("恢复失败：文件不是有效的备份 JSON"); }
+  };
+  reader.readAsText(file);
+}
+
+function applyOutfit(name) {
+  const o = OUTFITS.find(x => x.name === name) || customOutfits.find(x => x.name === name);
+  if (!o) return;
+  snapshot();
+  o.pos.forEach(en => {
+    if (!selected.includes(en)) { selected.push(en); weights[en] = (o.w && o.w[en]) || 1.0; }
+    else if (o.w && o.w[en] !== undefined) weights[en] = o.w[en];
+  });
+  (o.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  render();
+}
+
+function addCustomOutfit() {
+  const name = (document.getElementById("outfit-name").value || "").trim();
+  const pos = parseTags(document.getElementById("outfit-pos").value);
+  const neg = parseTags(document.getElementById("outfit-neg").value);
+  if (!name || pos.length === 0) return;
+  const existing = customOutfits.find(o => o.name === name);
+  if (existing) { existing.pos = pos; existing.neg = neg; }
+  else customOutfits.push({ name, pos, neg });
+  saveCustomOutfits();
+  renderOutfitSection();
+}
+
+function removeCustomOutfit(name) {
+  customOutfits = customOutfits.filter(o => o.name !== name);
+  saveCustomOutfits();
+  renderOutfitSection();
+}
+
+function renderOutfitSection() {
+  const old = document.getElementById("outfit-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "outfit-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>服装套装</span><span class='tag-count'>" + (OUTFITS.length + customOutfits.length) + " 套</span>";
+  details.appendChild(summary);
+
+  const form = document.createElement("div");
+  form.className = "custom-row";
+  const nameIn = document.createElement("input");
+  nameIn.id = "outfit-name"; nameIn.placeholder = "套装名称";
+  const posIn = document.createElement("input");
+  posIn.id = "outfit-pos"; posIn.placeholder = "正向标签（逗号分隔）";
+  const negIn = document.createElement("input");
+  negIn.id = "outfit-neg"; negIn.placeholder = "负向标签（可选）";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "新建";
+  addBtn.addEventListener("click", addCustomOutfit);
+  posIn.addEventListener("keydown", e => { if (e.key === "Enter") addCustomOutfit(); });
+  form.appendChild(nameIn); form.appendChild(posIn); form.appendChild(negIn); form.appendChild(addBtn);
+  details.appendChild(form);
+
+  const list = document.createElement("div");
+  list.className = "chips";
+  const renderOne = (o, isCustom) => {
+    const box = document.createElement("span");
+    if (isCustom) box.className = "custom-chip";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    b.textContent = o.name;
+    b.title = "应用：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
+    b.addEventListener("click", () => applyOutfit(o.name));
+    box.appendChild(b);
+    if (isCustom) {
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "×";
+      del.addEventListener("click", () => removeCustomOutfit(o.name));
+      box.appendChild(del);
+    }
+    list.appendChild(box);
+  };
+  OUTFITS.forEach(o => renderOne(o, false));
+  customOutfits.forEach(o => renderOne(o, true));
+  details.appendChild(list);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function applyTemplate(name) {
+  const t = TEMPLATES.find(x => x.name === name) || customTemplates.find(x => x.name === name);
+  if (!t) return;
+  snapshot();
+  selected.length = 0;
+  extraNeg.length = 0;
+  t.pos.forEach(en => { selected.push(en); weights[en] = (t.w && t.w[en]) || 1.0; });
+  (t.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  render();
+}
+
+function addCustomTemplate() {
+  const name = (document.getElementById("template-name").value || "").trim();
+  const pos = parseTags(document.getElementById("template-pos").value);
+  const neg = parseTags(document.getElementById("template-neg").value);
+  if (!name || pos.length === 0) return;
+  const existing = customTemplates.find(o => o.name === name);
+  if (existing) { existing.pos = pos; existing.neg = neg; }
+  else customTemplates.push({ name, pos, neg });
+  saveCustomTemplates();
+  renderTemplateSection();
+}
+
+function removeCustomTemplate(name) {
+  customTemplates = customTemplates.filter(o => o.name !== name);
+  saveCustomTemplates();
+  renderTemplateSection();
+}
+
+function renderTemplateSection() {
+  const old = document.getElementById("template-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "template-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>快捷模板</span><span class='tag-count'>" + (TEMPLATES.length + customTemplates.length) + " 个</span>";
+  details.appendChild(summary);
+
+  const form = document.createElement("div");
+  form.className = "custom-row";
+  const nameIn = document.createElement("input");
+  nameIn.id = "template-name"; nameIn.placeholder = "模板名称";
+  const posIn = document.createElement("input");
+  posIn.id = "template-pos"; posIn.placeholder = "正向标签（逗号分隔）";
+  const negIn = document.createElement("input");
+  negIn.id = "template-neg"; negIn.placeholder = "负向标签（可选）";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "新建";
+  addBtn.addEventListener("click", addCustomTemplate);
+  posIn.addEventListener("keydown", e => { if (e.key === "Enter") addCustomTemplate(); });
+  form.appendChild(nameIn); form.appendChild(posIn); form.appendChild(negIn); form.appendChild(addBtn);
+  details.appendChild(form);
+
+  const list = document.createElement("div");
+  list.className = "chips";
+  const renderOne = (o, isCustom) => {
+    const box = document.createElement("span");
+    if (isCustom) box.className = "custom-chip";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    b.textContent = o.name;
+    b.title = "套用：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
+    b.addEventListener("click", () => applyTemplate(o.name));
+    box.appendChild(b);
+    if (isCustom) {
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "×";
+      del.addEventListener("click", () => removeCustomTemplate(o.name));
+      box.appendChild(del);
+    }
+    list.appendChild(box);
+  };
+  TEMPLATES.forEach(o => renderOne(o, false));
+  customTemplates.forEach(o => renderOne(o, true));
+  details.appendChild(list);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+const SYNONYMS = {
+  "中出": ["nakadashi","creampie","internal cum","cum in pussy"],
+  "丝袜": ["pantyhose","thighhighs","stockings","kneehighs","black pantyhose","white pantyhose","nude pantyhose"],
+  "脚底": ["sole","soles","foot focus","feet"],
+  "劈叉": ["split","standing split","vertical split"],
+  "全裸": ["nude","completely nude","no clothes"]
+};
+
+function applyFilter(q) {
+  q = q.trim().toLowerCase();
+  const synEn = new Set();
+  Object.keys(SYNONYMS).forEach(k => {
+    if (q && k.toLowerCase().indexOf(q) !== -1) SYNONYMS[k].forEach(en => synEn.add(en));
+  });
+  mainEl.querySelectorAll("details").forEach(details => {
+    let any = false;
+    details.querySelectorAll(".chip").forEach(chip => {
+      const zh = (chip.dataset.zh || "").toLowerCase();
+      const en = (chip.dataset.en || "").toLowerCase();
+      const show = !q || zh.indexOf(q) !== -1 || en.indexOf(q) !== -1 || synEn.has(en);
+      chip.style.display = show ? "" : "none";
+      const parent = chip.parentElement;
+      if (parent && parent.classList.contains("custom-chip")) parent.style.display = show ? "" : "none";
+      if (show) any = true;
+    });
+    details.style.display = (!q || any) ? "" : "none";
+    if (q && any) details.open = true;
+  });
+}
+
+// ============ 搜索联想 + 收藏 ============
+function buildTagIndex() {
+  const list = [];
+  CATEGORIES.forEach(c => c.tags.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: isNeg(t.en) })));
+  customTags.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: !!t.neg }));
+  triggerWords.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: false }));
+  return list;
+}
+
+const suggestEl = document.getElementById("suggest");
+
+function hideSuggest() { if (suggestEl) suggestEl.style.display = "none"; }
+
+function updateSuggestions(q) {
+  if (!suggestEl) return;
+  q = (q || "").trim().toLowerCase();
+  if (!q) { hideSuggest(); return; }
+  const hits = buildTagIndex().filter(t =>
+    t.en.toLowerCase().indexOf(q) !== -1 || (t.zh && t.zh.toLowerCase().indexOf(q) !== -1)
+  ).slice(0, 8);
+  if (hits.length === 0) { hideSuggest(); return; }
+  suggestEl.innerHTML = "";
+  hits.forEach(t => {
+    const row = document.createElement("div");
+    row.className = "suggest-item";
+    const zh = document.createElement("span");
+    zh.textContent = t.zh || t.en;
+    const en = document.createElement("span");
+    en.className = "en"; en.textContent = t.en + (t.neg ? " ⛔" : "");
+    const fav = document.createElement("button");
+    fav.type = "button"; fav.className = "fav" + (favorites.includes(t.en) ? " on" : "");
+    fav.textContent = favorites.includes(t.en) ? "★" : "☆";
+    fav.title = "收藏";
+    fav.addEventListener("click", e => { e.stopPropagation(); toggleFavorite(t.en); });
+    row.appendChild(zh); row.appendChild(en); row.appendChild(fav);
+    row.addEventListener("mousedown", e => { e.preventDefault(); });
+    row.addEventListener("click", () => { toggleTag(t.en); searchEl.value = ""; applyFilter(""); hideSuggest(); });
+    suggestEl.appendChild(row);
+  });
+  suggestEl.style.display = "block";
+}
+
+function renderFavoriteSection() {
+  const old = document.getElementById("favorite-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "favorite-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>收藏</span><span class='tag-count'>" + favorites.length + " 个</span>";
+  details.appendChild(summary);
+  const wrap = document.createElement("div");
+  wrap.className = "chips";
+  if (favorites.length === 0) {
+    const tip = document.createElement("span");
+    tip.className = "empty-tip"; tip.style.width = "100%";
+    tip.textContent = "暂无收藏。在搜索联想里点 ★ 收藏常用标签";
+    wrap.appendChild(tip);
+  }
+  const idx = buildTagIndex();
+  favorites.forEach(en => {
+    const found = idx.find(t => t.en === en) || { zh: "", en };
+    wrap.appendChild(makeTagChip(found, { withDelete: true, onDelete: e => toggleFavorite(e) }));
+  });
+  details.appendChild(wrap);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function copyText(text, ta, btn) {
+  if (!text) return;
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+  const finish = () => { btn.textContent = "已复制 ✓"; setTimeout(() => { btn.textContent = btn.dataset.label; }, 1500); };
+  function fallback() {
+    ta.focus(); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    finish();
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(finish, fallback);
+  } else {
+    fallback();
+  }
+}
+
+function mergedText() {
+  const neg = resultNegEl.value;
+  return neg ? resultPosEl.value + " --neg " + neg : resultPosEl.value;
+}
+
+function selectAllNegative() {
+  CATEGORIES.forEach(c => {
+    if (c.name.indexOf("负面") === 0) {
+      c.tags.forEach(t => { if (!selected.includes(t.en)) { selected.push(t.en); weights[t.en] = 1.0; } });
+    }
+  });
+  render();
+}
+
+function initTheme() {
+  let saved = "light";
+  try { saved = localStorage.getItem("pg_theme") || "light"; } catch (e) {}
+  document.documentElement.dataset.theme = saved;
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  const btn = document.getElementById("theme-toggle");
+  if (btn) btn.textContent = document.documentElement.dataset.theme === "dark" ? "☀️" : "🌙";
+}
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = cur;
+  try { localStorage.setItem("pg_theme", cur); } catch (e) {}
+  updateThemeBtn();
+}
+
+const RANDOM_DIMS = [
+  ["1girl", "1boy", "2girls"],
+  ["white hair","black hair","blonde hair","pink hair","blue hair","purple hair","brown hair","red hair","green hair"],
+  ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes"],
+  ["long hair","short hair","twintails","ponytail","wavy hair"],
+  ["dress","maid","school uniform","kimono","bikini","hoodie","sailor uniform","cheongsam"],
+  ["standing","sitting","lying","kneeling","squatting"],
+  ["smile","blush","open mouth","looking at viewer","angry"],
+  ["indoors","outdoors","bedroom","beach","classroom","night"]
+];
+
+function randomPrompt() {
+  snapshot();
+  selected.length = 0;
+  extraNeg.length = 0;
+  ["masterpiece","best quality"].forEach(en => { selected.push(en); weights[en] = 1.2; });
+  RANDOM_DIMS.forEach(dim => {
+    const pick = dim[Math.floor(Math.random() * dim.length)];
+    if (!selected.includes(pick)) { selected.push(pick); weights[pick] = 1.0; }
+  });
+  render();
+}
+
+document.getElementById("random").addEventListener("click", randomPrompt);
+searchEl.addEventListener("input", e => { applyFilter(e.target.value); updateSuggestions(e.target.value); });
+searchEl.addEventListener("keydown", e => {
+  if (e.key === "Enter") { const first = suggestEl.querySelector(".suggest-item"); if (first) first.click(); }
+  else if (e.key === "Escape") { hideSuggest(); }
+});
+searchEl.addEventListener("blur", () => setTimeout(hideSuggest, 150));
+document.getElementById("format-select").addEventListener("change", e => {
+  outputFormat = e.target.value;
+  try { localStorage.setItem("pg_format", outputFormat); } catch (err) {}
+  refreshOutput();
+});
+document.getElementById("copy-pos").addEventListener("click", () => copyText(resultPosEl.value, resultPosEl, document.getElementById("copy-pos")));
+document.getElementById("copy-neg").addEventListener("click", () => copyText(resultNegEl.value, resultNegEl, document.getElementById("copy-neg")));
+document.getElementById("neg-all").addEventListener("click", selectAllNegative);
+document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+document.getElementById("clear").addEventListener("click", () => { snapshot(); selected.length = 0; render(); });
+document.getElementById("import-btn").addEventListener("click", importPrompt);
+document.getElementById("import-input").addEventListener("keydown", e => { if (e.key === "Enter") importPrompt(); });
+document.getElementById("undo").addEventListener("click", undo);
+document.getElementById("redo").addEventListener("click", redo);
+resultPosEl.addEventListener("click", () => resultPosEl.select());
+resultNegEl.addEventListener("click", () => resultNegEl.select());
+
+document.getElementById("format-select").value = outputFormat;
+
+initTheme();
+buildCategories();
+renderCustomSection();
+renderPresetSection();
+renderOutfitSection();
+renderTemplateSection();
+renderTriggerSection();
+renderFavoriteSection();
+render();
+</script>
+<script>
+(async function(){
+  const grid = document.getElementById('skeleton-grid');
+  if (!grid || !window.__AUTH_OK) return;
+  let items;
+  try { items = await (await fetch('skeleton_manifest.json')).json(); }
+  catch(e){ grid.innerHTML = '<div class="hint">骨骼图清单加载失败</div>'; return; }
+  if (!items || !items.length) { grid.innerHTML = '<div class="hint">暂无骨骼图</div>'; return; }
+  items.forEach(it => {
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--border); border-radius:8px; overflow:hidden; cursor:pointer; background:var(--card);';
+    const img = document.createElement('img');
+    img.src = 'skeletons/' + it.file;
+    img.loading = 'lazy';
+    img.style.cssText = 'width:100%; aspect-ratio:3/4; object-fit:contain; background:#0a0a0a;';
+    const label = document.createElement('div');
+    label.textContent = it.label || it.file;
+    label.style.cssText = 'padding:4px 6px; font-size:12px; color:var(--muted);';
+    card.appendChild(img); card.appendChild(label);
+    card.onclick = () => window.open('skeletons/' + it.file, '_blank');
+    grid.appendChild(card);
+  });
+})();
+</script>
+</body>
+</html>
