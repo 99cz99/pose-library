@@ -1806,7 +1806,7 @@ render();
 <script>
 // 骨骼清单（内嵌，避免 Mini App 里 fetch 挂起）
 const SKELETON_DATA = [
-  { "file": "pose_01.png", "pose": "pose_01.json", "label": "站姿-手臂展开" }
+  { "file": "pose_01.png", "pose": "pose_01.json", "label": "站姿-手臂展开", "w": 1024, "h": 1024 }
 ];
 (function(){
   const grid = document.getElementById('skeleton-grid');
@@ -1818,15 +1818,25 @@ const SKELETON_DATA = [
     card.style.cssText = 'border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--card); box-shadow:var(--shadow); transition:transform .12s, box-shadow .12s;';
     card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = 'var(--shadow-lg)'; };
     card.onmouseleave = () => { card.style.transform = ''; card.style.boxShadow = 'var(--shadow)'; };
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'position:relative;';
     const img = document.createElement('img');
     img.src = 'skeletons/' + it.file;
     img.loading = 'lazy';
-    img.style.cssText = 'width:100%; aspect-ratio:3/4; object-fit:contain; background:#0a0a0a; cursor:zoom-in;';
+    img.style.cssText = 'width:100%; aspect-ratio:3/4; object-fit:contain; background:#0a0a0a; cursor:zoom-in; display:block;';
     img.onclick = () => window.open('skeletons/' + it.file, '_blank');
+    imgWrap.appendChild(img);
+    if (it.w && it.h) {
+      const badge = document.createElement('div');
+      badge.textContent = it.w + '×' + it.h;
+      badge.style.cssText = 'position:absolute; bottom:4px; right:4px; background:rgba(0,0,0,.7); color:#fff; padding:1px 6px; border-radius:4px; font-size:11px; pointer-events:none;';
+      imgWrap.appendChild(badge);
+    }
+    card.appendChild(imgWrap);
     const label = document.createElement('div');
     label.textContent = it.label || it.file;
     label.style.cssText = 'padding:4px 6px 0; font-size:12px; color:var(--text);';
-    card.appendChild(img); card.appendChild(label);
+    card.appendChild(label);
     if (it.pose) {
       const btn = document.createElement('a');
       btn.href = 'skeletons/' + it.pose;
