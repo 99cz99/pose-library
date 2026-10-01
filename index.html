@@ -156,6 +156,7 @@ window.__AUTH_MSG = '';
   if (AUTHORIZED_IDS.indexOf(uid) === -1) { window.__AUTH_MSG = '无权限：你不在授权名单内'; return; }
   window.__AUTH_OK = true;
   try { Telegram.WebApp.ready(); } catch(e){}
+  try { Telegram.WebApp.expand(); } catch(e){}
 })();
 </script>
 </head>
