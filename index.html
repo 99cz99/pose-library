@@ -86,7 +86,7 @@
 
   main {
     max-width: 980px; margin: 0 auto;
-    padding: 16px 20px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 420px);
+    padding: 16px 20px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 72px);
   }
   .tab-page { display: none; }
   .tab-page.active { display: block; }
@@ -121,10 +121,29 @@
   .col-btns { display: flex; gap: 6px; }
 
   .result-bar {
-    position: fixed; left: 0; right: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); z-index: 10;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
     background: var(--card); border-top: 1px solid var(--border);
-    padding: 10px 16px; box-shadow: 0 -4px 20px rgba(16,24,40,.08);
+    border-radius: 16px 16px 0 0;
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 30px rgba(0,0,0,.22);
+    max-height: 85vh; overflow-y: auto;
+    transform: translateY(100%); transition: transform .25s ease;
   }
+  .result-bar.open { transform: translateY(0); }
+  .backdrop {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(0,0,0,.4); opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
+  .fab {
+    position: fixed; right: 16px; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px); z-index: 35;
+    padding: 10px 16px; border: none; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+    font-size: 14px; box-shadow: var(--shadow-lg);
+  }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .drawer-title { font-weight: 700; font-size: 15px; }
   .warnings {
     max-width: 980px; margin: 0 auto 8px; padding: 8px 12px;
     background: #fff4e5; border: 1px solid #f0c36d; border-radius: 8px;
@@ -228,8 +247,8 @@
     .search-wrap { flex: 1 1 100%; min-width: 100%; }
     .btn { padding: 8px 12px; font-size: 13px; min-height: 40px; }
     .count { font-size: 12px; }
-    main { padding: 12px 14px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 460px); }
-    .result-bar { padding: 8px 12px; }
+    main { padding: 12px 14px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 72px); }
+    .result-bar { padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); }
     .result-bar textarea { min-height: 44px; font-size: 12px; }
   }
 </style>
@@ -302,7 +321,12 @@ window.__AUTH_MSG = '';
   <button data-tab="library"><span class="ico">📚</span><span>我的</span></button>
 </nav>
 
+<div class="backdrop" id="backdrop"></div>
 <div class="result-bar" id="result-bar">
+  <div class="drawer-head">
+    <span class="drawer-title">输出</span>
+    <button class="btn" id="drawer-close" title="收起">✕</button>
+  </div>
   <div id="warnings" class="warnings" style="display:none"></div>
   <div class="action-strip">
     <button class="btn" id="undo" title="撤销">↶</button>
@@ -337,6 +361,8 @@ window.__AUTH_MSG = '';
     </div>
   </div>
 </div>
+
+<button class="fab" id="output-fab">📋 已选 0</button>
 
 <script>
 if (!window.__AUTH_OK) { document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,Segoe UI,Microsoft YaHei,sans-serif;color:#888;background:#16181d;padding:20px;">' + (window.__AUTH_MSG || '无权限') + '</div>'; throw new Error('__GATE_DENIED__'); }
@@ -1116,6 +1142,7 @@ function render() {
   const { issues, conflictTags } = checkIssues();
   refreshOutput();
   countEl.textContent = "已选 " + selected.length;
+  if (outputFab) outputFab.textContent = "📋 已选 " + selected.length;
   mainEl.querySelectorAll(".chip[data-en]").forEach(chip => {
     const en = chip.dataset.en;
     chip.classList.toggle("active", selected.includes(en));
@@ -2012,11 +2039,19 @@ document.getElementById("format-select").value = outputFormat;
 function switchTab(name) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
   document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  const bar = document.getElementById('result-bar');
-  if (bar) bar.style.display = (name === 'prompt') ? '' : 'none';
   try { localStorage.setItem('pg_tab', name); } catch (e) {}
 }
 document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+// ============ 输出抽屉 ============
+const outputFab = document.getElementById('output-fab');
+const outputDrawer = document.getElementById('result-bar');
+const outputBackdrop = document.getElementById('backdrop');
+function openDrawer() { outputDrawer.classList.add('open'); outputBackdrop.classList.add('show'); }
+function closeDrawer() { outputDrawer.classList.remove('open'); outputBackdrop.classList.remove('show'); }
+outputFab.addEventListener('click', openDrawer);
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+outputBackdrop.addEventListener('click', closeDrawer);
 
 // ============ 分类快捷索引 ============
 function buildCatNav() {
