@@ -22,11 +22,17 @@ No build / lint / test. Run scripts directly:
 
 ### Frontend (`index.html`)
 
-Single file, three `<script>` blocks:
+Single file, no build step; served by GitHub Pages from `master`.
 
-1. **Telegram auth gate** (`AUTHORIZED_IDS`) — client-side only, a *soft* gate; the skeleton/depth PNGs are public static files, so this does not actually protect content.
-2. **Main tag picker** — `CATEGORIES` (tag library) + built-in `OUTFITS` / `TEMPLATES` / `CHARACTERS` arrays + `custom*` arrays persisted in `localStorage` (`pg_*` keys). Each section is a `<details>` rendered by a `render*Section()` and prepended to `#categories`; an `apply*()` applies a preset (character/outfit append; template clears-and-sets). Adding a tag = add one `{zh, en}` line to the right `CATEGORIES` array.
-3. **Skeleton / depth galleries** — inlined `SKELETON_DATA` / `DEPTH_DATA` arrays (entry `{file, label, w, h}`; skeleton also has `pose` for the JSON download).
+- **Navigation** — a fixed bottom `.tabbar` switches three `.tab-page` sections via `switchTab(name)` (active tab persisted in `localStorage` `pg_tab`): `#tab-prompt` (标签 — tag picker), `#tab-gallery` (图库 — galleries), `#tab-library` (我的 — preset management).
+- **Output drawer** — the prompt result (warnings / output-format / selected-tags / import / pos-neg textareas) is a bottom slide-up `.result-bar`, hidden by default and toggled by the floating `#output-fab` button + `.backdrop` (`openDrawer()`/`closeDrawer()`). It's an overlay, not a tab.
+
+Data & rendering:
+
+- **Tag library** — `CATEGORIES` array; each category renders as a `<details>` of `{zh, en}` chips. A category may contain subgroup header objects `{_h:"名称"}` that render as a `.subgroup-label` (used by `服装`: 校服 / 职业制服 / 泳装内衣). The load-time tag sort skips categories containing `_h`, and `buildCategories` / `buildTagIndex` / `selectAllNegative` skip `_h` entries. Add a tag = add one `{zh, en}` line (or `{_h:"…"}` for a subgroup header).
+- **Presets** — built-in `OUTFITS` / `TEMPLATES` / `CHARACTERS` + `custom*` arrays persisted in `localStorage` (`pg_*` keys). `render*Section()` builds each section; quick-pick sections (收藏 / LoRA 触发词) prepend into `#categories`, management sections (预设 / 快捷模板 / 角色预设 / 服装套装 / 添加标签) prepend into `#library-sections`. `apply*()` applies a preset (character/outfit append; template clears-and-sets).
+- **Auth gate** — `AUTHORIZED_IDS`, client-side only (soft gate; the skeleton/depth PNGs are public static files).
+- **Galleries** — inlined `SKELETON_DATA` / `DEPTH_DATA` arrays (entry `{file, label, w, h}`; skeleton also has `pose` for the JSON download).
 
 Adding content (from `README.md`):
 
