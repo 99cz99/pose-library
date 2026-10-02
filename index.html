@@ -1497,10 +1497,10 @@ function applyCharacter(name) {
       saveTriggers();
       renderTriggerSection();
     }
-    if (!selected.includes(c.trigger)) { selected.push(c.trigger); weights[c.trigger] = 1.3; }
+    if (!selected.includes(c.trigger)) { insertSorted(c.trigger); weights[c.trigger] = 1.3; }
   }
   (c.pos || []).forEach(en => {
-    if (!selected.includes(en)) { selected.push(en); weights[en] = (c.w && c.w[en]) || 1.0; }
+    if (!selected.includes(en)) { insertSorted(en); weights[en] = (c.w && c.w[en]) || 1.0; }
     else if (c.w && c.w[en] !== undefined) weights[en] = c.w[en];
   });
   (c.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
@@ -1630,6 +1630,7 @@ function renderCharacterSection() {
     b.type = "button"; b.className = "chip";
     b.textContent = c.name;
     b.title = "套用：" + (c.trigger ? c.trigger + ", " : "") + (c.pos || []).join(", ") + (c.neg && c.neg.length ? "（负向 " + c.neg.join(", ") + "）" : "");
+    b.dataset.search = c.name + " " + (c.trigger || "") + " " + (c.pos || []).join(" ");
     b.addEventListener("click", () => applyCharacter(c.name));
     box.appendChild(b);
     if (isCustom) {
@@ -1744,7 +1745,8 @@ function applyFilter(q) {
     details.querySelectorAll(".chip").forEach(chip => {
       const zh = (chip.dataset.zh || "").toLowerCase();
       const en = (chip.dataset.en || "").toLowerCase();
-      const show = !q || zh.indexOf(q) !== -1 || en.indexOf(q) !== -1 || synEn.has(en);
+      const search = (chip.dataset.search || "").toLowerCase();
+      const show = !q || zh.indexOf(q) !== -1 || en.indexOf(q) !== -1 || search.indexOf(q) !== -1 || synEn.has(en);
       chip.style.display = show ? "" : "none";
       const parent = chip.parentElement;
       if (parent && parent.classList.contains("custom-chip")) parent.style.display = show ? "" : "none";
@@ -1907,6 +1909,7 @@ document.getElementById("format-select").addEventListener("change", e => {
 });
 document.getElementById("copy-pos").addEventListener("click", () => copyText(resultPosEl.value, resultPosEl, document.getElementById("copy-pos")));
 document.getElementById("copy-neg").addEventListener("click", () => copyText(resultNegEl.value, resultNegEl, document.getElementById("copy-neg")));
+document.getElementById("copy-all").addEventListener("click", () => copyText(mergedText(), resultPosEl, document.getElementById("copy-all")));
 document.getElementById("neg-all").addEventListener("click", selectAllNegative);
 document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
 document.getElementById("clear").addEventListener("click", () => { snapshot(); selected.length = 0; render(); });
