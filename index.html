@@ -815,6 +815,18 @@ const TEMPLATES = [
   { name: "半身照", pos: ["masterpiece","best quality","1girl","solo","upper body","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
   { name: "NSFW裸体", pos: ["masterpiece","best quality","1girl","solo","completely nude","spread legs","blush","looking at viewer"], neg: ["loli","child"], w: {masterpiece:1.2, "best quality":1.2} },
 ];
+
+// 内置角色预设（点击套用完整角色底：触发词 + 外貌 + 服装 + 质量/手部标签）
+const CHARACTERS = [
+  {
+    name: "黑发双马尾女仆",
+    trigger: "shatangjiang",
+    pos: ["masterpiece","best quality","1girl","solo","black hair","long hair","twintails",
+          "red eyes","empty eyes","half-closed eyes","medium breasts","maid","maid headdress",
+          "detailed face","detailed eyes","detailed hands","detailed fingers","perfect hands","five fingers"],
+    w: { twintails:1.2, "red eyes":1.2 }
+  }
+];
 const mainEl = document.getElementById("categories");
 const resultPosEl = document.getElementById("result-pos");
 const resultNegEl = document.getElementById("result-neg");
@@ -859,6 +871,12 @@ const CUSTOM_TEMPLATES_KEY = "pg_custom_templates";
 let customTemplates = [];
 try { customTemplates = JSON.parse(localStorage.getItem(CUSTOM_TEMPLATES_KEY) || "[]"); } catch (e) { customTemplates = []; }
 function saveCustomTemplates() { try { localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(customTemplates)); } catch (e) {} }
+
+// 自定义角色预设（localStorage 持久化）
+const CUSTOM_CHARACTERS_KEY = "pg_custom_characters";
+let customCharacters = [];
+try { customCharacters = JSON.parse(localStorage.getItem(CUSTOM_CHARACTERS_KEY) || "[]"); } catch (e) { customCharacters = []; }
+function saveCustomCharacters() { try { localStorage.setItem(CUSTOM_CHARACTERS_KEY, JSON.stringify(customCharacters)); } catch (e) {} }
 
 // 收藏（localStorage 持久化）
 const FAV_KEY = "pg_favorites";
@@ -1371,7 +1389,7 @@ function deletePreset(name) {
 }
 
 function exportConfig() {
-  const blob = new Blob([JSON.stringify({ customTags, presets, customOutfits, customTemplates, triggerWords }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ customTags, presets, customOutfits, customTemplates, triggerWords, customCharacters }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "prompt_backup.json";
@@ -1421,6 +1439,15 @@ function importConfig(file) {
           }
         });
       }
+      if (Array.isArray(data.customCharacters)) {
+        data.customCharacters.forEach(c => {
+          if (c && typeof c.name === "string" && Array.isArray(c.pos) && Array.isArray(c.neg)) {
+            const ex = customCharacters.find(x => x.name === c.name);
+            if (ex) { ex.trigger = c.trigger || ""; ex.pos = c.pos; ex.neg = c.neg; }
+            else customCharacters.push({ name: c.name, trigger: c.trigger || "", pos: c.pos, neg: c.neg });
+          }
+        });
+      }
       if (Array.isArray(data.triggerWords)) {
         data.triggerWords.forEach(t => {
           if (t && typeof t.en === "string" && !triggerWords.some(x => x.en === t.en)) {
@@ -1432,11 +1459,13 @@ function importConfig(file) {
       saveCustom();
       saveCustomOutfits();
       saveCustomTemplates();
+      saveCustomCharacters();
       saveTriggers();
       rebuildCustomNeg();
       renderPresetSection();
       renderCustomSection();
       renderTriggerSection();
+      renderCharacterSection();
       buildCategories();
       renderOutfitSection();
       renderTemplateSection();
@@ -1455,6 +1484,26 @@ function applyOutfit(name) {
     else if (o.w && o.w[en] !== undefined) weights[en] = o.w[en];
   });
   (o.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  render();
+}
+
+function applyCharacter(name) {
+  const c = CHARACTERS.find(x => x.name === name) || customCharacters.find(x => x.name === name);
+  if (!c) return;
+  snapshot();
+  if (c.trigger) {
+    if (!triggerWords.some(t => t.en === c.trigger)) {
+      triggerWords.push({ zh: c.name, en: c.trigger });
+      saveTriggers();
+      renderTriggerSection();
+    }
+    if (!selected.includes(c.trigger)) { selected.push(c.trigger); weights[c.trigger] = 1.3; }
+  }
+  (c.pos || []).forEach(en => {
+    if (!selected.includes(en)) { selected.push(en); weights[en] = (c.w && c.w[en]) || 1.0; }
+    else if (c.w && c.w[en] !== undefined) weights[en] = c.w[en];
+  });
+  (c.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
   render();
 }
 
@@ -1522,6 +1571,77 @@ function renderOutfitSection() {
   };
   OUTFITS.forEach(o => renderOne(o, false));
   customOutfits.forEach(o => renderOne(o, true));
+  details.appendChild(list);
+  mainEl.insertBefore(details, mainEl.firstChild);
+}
+
+function addCustomCharacter() {
+  const name = (document.getElementById("character-name").value || "").trim();
+  const trigger = (document.getElementById("character-trigger").value || "").trim().toLowerCase();
+  const pos = parseTags(document.getElementById("character-pos").value);
+  const neg = parseTags(document.getElementById("character-neg").value);
+  if (!name || pos.length === 0) return;
+  const existing = customCharacters.find(c => c.name === name);
+  if (existing) { existing.trigger = trigger; existing.pos = pos; existing.neg = neg; }
+  else customCharacters.push({ name, trigger, pos, neg });
+  saveCustomCharacters();
+  renderCharacterSection();
+}
+
+function removeCustomCharacter(name) {
+  customCharacters = customCharacters.filter(c => c.name !== name);
+  saveCustomCharacters();
+  renderCharacterSection();
+}
+
+function renderCharacterSection() {
+  const old = document.getElementById("character-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "character-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>角色预设</span><span class='tag-count'>" + (CHARACTERS.length + customCharacters.length) + " 个</span>";
+  details.appendChild(summary);
+
+  const form = document.createElement("div");
+  form.className = "custom-row";
+  const nameIn = document.createElement("input");
+  nameIn.id = "character-name"; nameIn.placeholder = "角色名称";
+  const trigIn = document.createElement("input");
+  trigIn.id = "character-trigger"; trigIn.placeholder = "触发词（可选）";
+  const posIn = document.createElement("input");
+  posIn.id = "character-pos"; posIn.placeholder = "正向标签（逗号分隔）";
+  const negIn = document.createElement("input");
+  negIn.id = "character-neg"; negIn.placeholder = "负向标签（可选）";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "新建";
+  addBtn.addEventListener("click", addCustomCharacter);
+  posIn.addEventListener("keydown", e => { if (e.key === "Enter") addCustomCharacter(); });
+  form.appendChild(nameIn); form.appendChild(trigIn); form.appendChild(posIn); form.appendChild(negIn); form.appendChild(addBtn);
+  details.appendChild(form);
+
+  const list = document.createElement("div");
+  list.className = "chips";
+  const renderOne = (c, isCustom) => {
+    const box = document.createElement("span");
+    if (isCustom) box.className = "custom-chip";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    b.textContent = c.name;
+    b.title = "套用：" + (c.trigger ? c.trigger + ", " : "") + (c.pos || []).join(", ") + (c.neg && c.neg.length ? "（负向 " + c.neg.join(", ") + "）" : "");
+    b.addEventListener("click", () => applyCharacter(c.name));
+    box.appendChild(b);
+    if (isCustom) {
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "del"; del.textContent = "×";
+      del.addEventListener("click", () => removeCustomCharacter(c.name));
+      box.appendChild(del);
+    }
+    list.appendChild(box);
+  };
+  CHARACTERS.forEach(c => renderOne(c, false));
+  customCharacters.forEach(c => renderOne(c, true));
   details.appendChild(list);
   mainEl.insertBefore(details, mainEl.firstChild);
 }
@@ -1806,6 +1926,7 @@ renderPresetSection();
 renderOutfitSection();
 renderTemplateSection();
 renderTriggerSection();
+renderCharacterSection();
 renderFavoriteSection();
 render();
 </script>
