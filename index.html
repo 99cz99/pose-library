@@ -107,6 +107,11 @@
   details[open] summary::after { content: "▴"; }
   summary .tag-count { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
   .chips { display: flex; flex-wrap: wrap; gap: 9px; padding: 12px 16px 16px; }
+  .subgroup-label {
+    width: 100%; margin: 6px 0 2px; padding: 2px 0 0;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    border-top: 1px solid var(--border);
+  }
   .chip {
     padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px;
     background: var(--card); color: var(--text); font-size: 14px; cursor: pointer; user-select: none;
@@ -576,14 +581,12 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "校服", tags: [
+    name: "服装", tags: [
+      {_h:"校服"},
       {zh:"校服", en:"school uniform"}, {zh:"水手服", en:"sailor uniform"}, {zh:"水手领", en:"sailor collar"}, {zh:"领巾", en:"neckerchief"},
       {zh:"西式校服", en:"blazer"}, {zh:"泡泡袜", en:"loose socks"}, {zh:"书包", en:"school bag"}, {zh:"玛丽珍鞋", en:"mary janes"},
-      {zh:"体操服", en:"gym uniform"}, {zh:"灯笼裤", en:"bloomers"}
-    ]
-  },
-  {
-    name: "职业制服", tags: [
+      {zh:"体操服", en:"gym uniform"}, {zh:"灯笼裤", en:"bloomers"},
+      {_h:"职业制服"},
       {zh:"女仆装", en:"maid"}, {zh:"女仆头饰", en:"maid headdress"}, {zh:"护士", en:"nurse"}, {zh:"护士帽", en:"nurse cap"},
       {zh:"医生", en:"doctor"}, {zh:"听诊器", en:"stethoscope"}, {zh:"警察", en:"police"}, {zh:"军装", en:"military uniform"},
       {zh:"燕尾服", en:"tuxedo"}, {zh:"空姐", en:"flight attendant"}, {zh:"办公室女郎", en:"office lady"}, {zh:"巫女服", en:"miko"},
@@ -591,21 +594,14 @@ const CATEGORIES = [
       {zh:"赛车女郎", en:"race queen"}, {zh:"女服务员", en:"waitress"}, {zh:"厨师", en:"chef"}, {zh:"消防员", en:"firefighter"},
       {zh:"啦啦队长", en:"cheerleader"}, {zh:"偶像", en:"idol"}, {zh:"秘书", en:"secretary"}, {zh:"女海盗", en:"pirate"},
       {zh:"女牛仔", en:"cowgirl"}, {zh:"飞行员", en:"pilot"}, {zh:"船长", en:"captain"}, {zh:"科学家", en:"scientist"},
-      {zh:"圣女", en:"saint"}, {zh:"花魁", en:"oiran"}, {zh:"圣诞装", en:"santa costume"}, {zh:"机械师", en:"mechanic"}
-    ]
-  },
-  {
-    name: "泳装内衣", tags: [
+      {zh:"圣女", en:"saint"}, {zh:"花魁", en:"oiran"}, {zh:"圣诞装", en:"santa costume"}, {zh:"机械师", en:"mechanic"},
+      {_h:"泳装内衣"},
       {zh:"泳装", en:"swimsuit"}, {zh:"比基尼", en:"bikini"}, {zh:"连体泳衣", en:"one-piece swimsuit"}, {zh:"死库水", en:"school swimsuit"},
       {zh:"竞速泳衣", en:"racing swimsuit"}, {zh:"比基尼铠甲", en:"bikini armor"}, {zh:"内衣", en:"lingerie"}, {zh:"胸罩", en:"bra"},
       {zh:"内裤", en:"panties"}, {zh:"运动内衣", en:"sports bra"}, {zh:"紧身衣", en:"leotard"}, {zh:"连体衣", en:"bodysuit"},
       {zh:"丁字裤", en:"thong"}, {zh:"高叉泳衣", en:"slingshot swimsuit"}, {zh:"高叉", en:"highleg"}, {zh:"微型比基尼", en:"micro bikini"},
       {zh:"无肩带胸罩", en:"strapless bra"}, {zh:"蕾丝内衣", en:"lace lingerie"}, {zh:"裹胸布", en:"sarashi"}, {zh:"乳贴", en:"pasties"},
-      {zh:"日式兜裆布", en:"fundoshi"}, {zh:"条纹内裤", en:"striped panties"}, {zh:"泳装晒痕", en:"tan lines"}, {zh:"湿衬衫", en:"wet shirt"}
-    ]
-  },
-  {
-    name: "服装", tags: [
+      {zh:"日式兜裆布", en:"fundoshi"}, {zh:"条纹内裤", en:"striped panties"}, {zh:"泳装晒痕", en:"tan lines"}, {zh:"湿衬衫", en:"wet shirt"},
       {zh:"连衣裙", en:"dress"}, {zh:"裙子", en:"skirt"}, {zh:"超短裙", en:"miniskirt"}, {zh:"百褶裙", en:"pleated skirt"},
       {zh:"长裙", en:"long skirt"}, {zh:"高开叉裙", en:"slit skirt"}, {zh:"无袖连衣裙", en:"sleeveless dress"}, {zh:"露背", en:"backless"},
       {zh:"白裙", en:"white dress"}, {zh:"黑裙", en:"black dress"}, {zh:"花边裙", en:"frilled dress"},
@@ -904,11 +900,14 @@ function tagGroup(catName, en) {
   const i = groups.findIndex(k => en.toLowerCase().indexOf(k) !== -1);
   return i === -1 ? 999999 : i;
 }
-CATEGORIES.forEach(c => c.tags.sort((a, b) => {
-  const ga = tagGroup(c.name, a.en), gb = tagGroup(c.name, b.en);
-  if (ga !== gb) return ga - gb;
-  return (a.zh || a.en).localeCompare(b.zh || b.en, 'zh');
-}));
+CATEGORIES.forEach(c => {
+  if (c.tags.some(t => t._h)) return; // 带子类头的分类保持手写顺序
+  c.tags.sort((a, b) => {
+    const ga = tagGroup(c.name, a.en), gb = tagGroup(c.name, b.en);
+    if (ga !== gb) return ga - gb;
+    return (a.zh || a.en).localeCompare(b.zh || b.en, 'zh');
+  });
+});
 
 // ============ 状态与渲染 ============
 const selected = []; // 已选英文 tag（按选择顺序）
@@ -1324,7 +1323,16 @@ function buildCategories() {
 
     const wrap = document.createElement("div");
     wrap.className = "chips";
-    cat.tags.forEach(t => wrap.appendChild(makeTagChip(t, {})));
+    cat.tags.forEach(t => {
+      if (t._h) {
+        const h = document.createElement("div");
+        h.className = "subgroup-label";
+        h.textContent = t._h;
+        wrap.appendChild(h);
+      } else {
+        wrap.appendChild(makeTagChip(t, {}));
+      }
+    });
     customInCat.forEach(t => wrap.appendChild(makeTagChip(t, { withDelete: true, onDelete: removeCustomTag })));
     details.appendChild(wrap);
     mainEl.appendChild(details);
@@ -1939,7 +1947,7 @@ function applyFilter(q) {
 // ============ 搜索联想 + 收藏 ============
 function buildTagIndex() {
   const list = [];
-  CATEGORIES.forEach(c => c.tags.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: isNeg(t.en) })));
+  CATEGORIES.forEach(c => c.tags.forEach(t => { if (!t._h) list.push({ zh: t.zh || t.en, en: t.en, neg: isNeg(t.en) }); }));
   customTags.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: !!t.neg }));
   triggerWords.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: false }));
   return list;
@@ -2029,7 +2037,7 @@ function mergedText() {
 function selectAllNegative() {
   CATEGORIES.forEach(c => {
     if (c.name.indexOf("负面") === 0) {
-      c.tags.forEach(t => { if (!selected.includes(t.en)) { selected.push(t.en); weights[t.en] = 1.0; } });
+      c.tags.forEach(t => { if (!t._h && !selected.includes(t.en)) { selected.push(t.en); weights[t.en] = 1.0; } });
     }
   });
   render();
