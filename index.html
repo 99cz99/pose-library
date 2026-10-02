@@ -572,7 +572,7 @@ const CATEGORIES = [
       {zh:"中指", en:"middle finger"}, {zh:"手指比心", en:"finger heart"}, {zh:"双手比心", en:"hand heart"},
       {zh:"OK手势", en:"ok sign"}, {zh:"握手", en:"handshake"}, {zh:"捂嘴", en:"hand over mouth"},
       {zh:"摸头", en:"hand on head"}, {zh:"摸脸", en:"hand on face"}, {zh:"十指紧扣", en:"interlocked fingers"},
-      {zh:"牵手", en:"holding hands"}, {zh:"勾手指", en:"beckoning"}
+      {zh:"牵手", en:"holding hands"}, {zh:"勾手指", en:"beckoning"}, {zh:"噤声", en:"shh"}, {zh:"手指抵唇", en:"finger to lips"}, {zh:"食指竖立", en:"index finger raised"}
     ]
   },
   {
@@ -580,6 +580,7 @@ const CATEGORIES = [
       {zh:"连衣裙", en:"dress"}, {zh:"裙子", en:"skirt"}, {zh:"超短裙", en:"miniskirt"},
       {zh:"百褶裙", en:"pleated skirt"}, {zh:"女仆装", en:"maid"}, {zh:"校服", en:"school uniform"},
       {zh:"水手服", en:"sailor uniform"}, {zh:"比基尼", en:"bikini"}, {zh:"泳装", en:"swimsuit"},
+      {zh:"水手领", en:"sailor collar"}, {zh:"领巾", en:"neckerchief"}, {zh:"泡泡袜", en:"loose socks"}, {zh:"西式校服", en:"blazer"}, {zh:"书包", en:"school bag"}, {zh:"玛丽珍鞋", en:"mary janes"},
       {zh:"连体泳衣", en:"one-piece swimsuit"}, {zh:"内衣", en:"lingerie"}, {zh:"胸罩", en:"bra"},
       {zh:"内裤", en:"panties"}, {zh:"过膝袜", en:"thighhighs"}, {zh:"连裤袜", en:"pantyhose"},
       {zh:"长筒袜", en:"stockings"}, {zh:"吊袜带", en:"garter belt"}, {zh:"及膝袜", en:"kneehighs"}, {zh:"黑丝", en:"black pantyhose"}, {zh:"白丝", en:"white pantyhose"}, {zh:"肉丝", en:"nude pantyhose"}, {zh:"透肉", en:"see-through"},
@@ -645,7 +646,7 @@ const CATEGORIES = [
       {zh:"天空", en:"sky"}, {zh:"窗边", en:"window"}, {zh:"床", en:"bed"},
       {zh:"简单背景", en:"simple background"}, {zh:"白背景", en:"white background"}, {zh:"渐变背景", en:"gradient background"},
       {zh:"风景", en:"scenery"}, {zh:"城市", en:"cityscape"},
-      {zh:"天台", en:"rooftop"}, {zh:"公园", en:"park"}, {zh:"街道", en:"street"},
+      {zh:"天台", en:"rooftop"}, {zh:"公园", en:"park"}, {zh:"街道", en:"street"}, {zh:"小巷", en:"alley"}, {zh:"后巷", en:"back alley"},
       {zh:"泳池", en:"pool"}, {zh:"图书馆", en:"library"}, {zh:"厨房", en:"kitchen"},
       {zh:"草地", en:"meadow"}, {zh:"废墟", en:"ruins"}, {zh:"水下", en:"underwater"},
       {zh:"温泉", en:"onsen"}, {zh:"医院", en:"hospital"},
@@ -682,7 +683,7 @@ const CATEGORIES = [
   },
   {
     name: "视角", tags: [
-      {zh:"看向别处", en:"looking away"}, {zh:"抬头看", en:"looking up"}, {zh:"低头看", en:"looking down"},
+      {zh:"看向别处", en:"looking away"}, {zh:"目视前方", en:"looking ahead"}, {zh:"抬头看", en:"looking up"}, {zh:"低头看", en:"looking down"},
       {zh:"侧面", en:"from side"}, {zh:"正面", en:"seen from front"}, {zh:"四分之三侧", en:"three-quarter view"},
       {zh:"正俯视", en:"top-down"}, {zh:"极端仰视", en:"worm's eye view"}, {zh:"高角度", en:"high angle"},
       {zh:"低角度", en:"low angle"}, {zh:"第一人称", en:"first-person view"}, {zh:"主观视角", en:"pov"},
@@ -731,7 +732,7 @@ const CATEGORIES = [
       {zh:"恶魔翅膀", en:"demon wings"}, {zh:"天使翅膀", en:"angel wings"}, {zh:"龙角", en:"dragon horns"},
       {zh:"龙尾", en:"dragon tail"}, {zh:"狐尾", en:"fox tail"}, {zh:"犬尾", en:"dog tail"},
       {zh:"鳞片", en:"scales"}, {zh:"机械臂", en:"mechanical arm"}, {zh:"义肢", en:"prosthetic"},
-      {zh:"机械人", en:"android"}
+      {zh:"机械人", en:"android"}, {zh:"机娘", en:"mecha musume"}, {zh:"机械腿", en:"mechanical legs"}, {zh:"机械关节", en:"robot joints"}, {zh:"外骨骼", en:"exoskeleton"}, {zh:"改造人", en:"cyborg"}, {zh:"能源核心", en:"energy core"}, {zh:"机械翼", en:"mechanical wings"}
     ]
   },
   {
@@ -742,7 +743,7 @@ const CATEGORIES = [
       {zh:"人鱼", en:"mermaid"}, {zh:"幽灵", en:"ghost"}, {zh:"鬼", en:"oni"},
       {zh:"龙娘", en:"dragon girl"}, {zh:"狼娘", en:"wolf girl"}, {zh:"精灵族", en:"elf"},
       {zh:"暗精灵", en:"dark elf"}, {zh:"女神", en:"goddess"}, {zh:"妖怪", en:"yokai"},
-      {zh:"僵尸", en:"zombie"}, {zh:"机械娘", en:"robot girl"}, {zh:"巫妖", en:"lich"},
+      {zh:"僵尸", en:"zombie"}, {zh:"机械娘", en:"robot girl"}, {zh:"巫妖", en:"lich"}, {zh:"鲸娘", en:"whale girl"},
       {zh:"天狗", en:"tengu"}
     ]
   },
@@ -753,7 +754,7 @@ const CATEGORIES = [
       {zh:"花", en:"flower"}, {zh:"气球", en:"balloon"}, {zh:"武器", en:"weapon"},
       {zh:"刀", en:"knife"},
       {zh:"法杖", en:"staff"}, {zh:"盾牌", en:"shield"}, {zh:"长枪", en:"spear"},
-      {zh:"斧头", en:"axe"}, {zh:"镰刀", en:"scythe"}, {zh:"魔杖", en:"magic wand"},
+      {zh:"斧头", en:"axe"}, {zh:"镰刀", en:"scythe"}, {zh:"魔杖", en:"magic wand"}, {zh:"巨剑", en:"giant sword"}, {zh:"能量刃", en:"energy blade"}, {zh:"轨道炮", en:"railgun"}, {zh:"肩炮", en:"shoulder cannon"}, {zh:"浮游炮", en:"funnel"},
       {zh:"戒指", en:"ring"}, {zh:"项链", en:"necklace"}, {zh:"耳环", en:"earrings"},
       {zh:"皇冠", en:"crown"}, {zh:"王冠", en:"tiara"}, {zh:"吉他", en:"guitar"},
       {zh:"麦克风", en:"microphone"}, {zh:"镜子", en:"mirror"}, {zh:"蜡烛", en:"candle"},
@@ -769,6 +770,14 @@ const CATEGORIES = [
       {zh:"时钟", en:"clock"}, {zh:"枕头", en:"pillow"}, {zh:"毯子", en:"blanket"},
       {zh:"笔", en:"pen"}, {zh:"剪刀", en:"scissors"},
       {zh:"泰迪熊", en:"teddy bear"}
+    ]
+  },
+  {
+    name: "催眠控制", tags: [
+      {zh:"催眠", en:"hypnosis"}, {zh:"精神控制", en:"mind control"}, {zh:"被催眠", en:"hypnotized"},
+      {zh:"螺旋眼", en:"spiral eyes"}, {zh:"失神", en:"dazed"}, {zh:"恍惚", en:"entranced"},
+      {zh:"怀表", en:"pocket watch"}, {zh:"吊坠", en:"pendulum"}, {zh:"响指", en:"finger snap"},
+      {zh:"催眠应用", en:"hypno app"}, {zh:"发光屏幕", en:"glowing screen"}, {zh:"智能手机", en:"smartphone"}, {zh:"举手机", en:"holding phone"}
     ]
   },
   {
