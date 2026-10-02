@@ -33,6 +33,11 @@
   [data-theme="dark"] .label.pos { color: #7bd69a; background: #1f3a2a; }
   [data-theme="dark"] .label.neg { color: #f08a82; background: #3a1f1d; }
   * { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 10px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  html { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
@@ -50,6 +55,8 @@
     box-shadow: 0 1px 8px rgba(16,24,40,.05);
   }
   header .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .top-actions { display: flex; align-items: center; gap: 6px; }
+  .top-actions .btn { padding: 6px 10px; font-size: 13px; }
   header h1 {
     margin: 0; font-size: 17px; font-weight: 700;
     letter-spacing: 0.2px;
@@ -79,7 +86,7 @@
 
   main {
     max-width: 980px; margin: 0 auto;
-    padding: 16px 20px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 360px);
+    padding: 16px 20px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 420px);
   }
   .tab-page { display: none; }
   .tab-page.active { display: block; }
@@ -183,9 +190,8 @@
   #cat-nav {
     display: flex; gap: 8px; overflow-x: auto;
     padding: 4px 0 12px; margin-bottom: 4px;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
   }
-  #cat-nav::-webkit-scrollbar { display: none; }
   #cat-nav button {
     flex: 0 0 auto; padding: 8px 14px; border: 1px solid var(--border);
     border-radius: 999px; background: var(--card); color: var(--text);
@@ -222,7 +228,7 @@
     .search-wrap { flex: 1 1 100%; min-width: 100%; }
     .btn { padding: 8px 12px; font-size: 13px; min-height: 40px; }
     .count { font-size: 12px; }
-    main { padding: 12px 14px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 340px); }
+    main { padding: 12px 14px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 460px); }
     .result-bar { padding: 8px 12px; }
     .result-bar textarea { min-height: 44px; font-size: 12px; }
   }
@@ -251,7 +257,11 @@ window.__AUTH_MSG = '';
 <header>
   <div class="top">
     <h1>提示词生成器</h1>
-    <span class="count" id="count">已选 0</span>
+    <div class="top-actions">
+      <span class="count" id="count">已选 0</span>
+      <button class="btn" id="theme-toggle">🌙</button>
+      <button class="btn" id="fullscreen-toggle">⛶ 全屏</button>
+    </div>
   </div>
   <div class="toolbar">
     <div class="search-wrap">
@@ -283,13 +293,6 @@ window.__AUTH_MSG = '';
 
   <section id="tab-library" class="tab-page">
     <div id="library-sections"></div>
-    <details id="settings-section">
-      <summary><span>设置</span></summary>
-      <div class="custom-row">
-        <button class="btn" id="theme-toggle">🌙</button>
-        <button class="btn" id="fullscreen-toggle">⛶ 全屏</button>
-      </div>
-    </details>
   </section>
 </main>
 
