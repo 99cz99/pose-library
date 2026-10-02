@@ -37,7 +37,7 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-  html { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  html { overflow-y: scroll; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
@@ -1154,6 +1154,7 @@ function render() {
   const warnEl = document.getElementById("warnings");
   if (issues.length) { warnEl.textContent = "⚠ " + issues.join("　|　"); warnEl.style.display = "block"; }
   else { warnEl.style.display = "none"; }
+  updateOutfitChips();
   renderSelectedPanel();
 }
 
@@ -1591,12 +1592,35 @@ function applyOutfit(name) {
   const o = OUTFITS.find(x => x.name === name) || customOutfits.find(x => x.name === name);
   if (!o) return;
   snapshot();
-  o.pos.forEach(en => {
-    if (!selected.includes(en)) { selected.push(en); weights[en] = (o.w && o.w[en]) || 1.0; }
-    else if (o.w && o.w[en] !== undefined) weights[en] = o.w[en];
-  });
-  (o.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  const applied = o.pos.length > 0 && o.pos.every(en => selected.includes(en));
+  if (applied) {
+    // 已应用 → 取消：移除 pos 与 neg
+    o.pos.forEach(en => {
+      const i = selected.indexOf(en);
+      if (i >= 0) selected.splice(i, 1);
+      delete weights[en];
+    });
+    (o.neg || []).forEach(en => {
+      const i = extraNeg.indexOf(en);
+      if (i >= 0) extraNeg.splice(i, 1);
+    });
+  } else {
+    o.pos.forEach(en => {
+      if (!selected.includes(en)) { selected.push(en); weights[en] = (o.w && o.w[en]) || 1.0; }
+      else if (o.w && o.w[en] !== undefined) weights[en] = o.w[en];
+    });
+    (o.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  }
   render();
+}
+
+function updateOutfitChips() {
+  document.querySelectorAll('#outfit-section .chip[data-outfit]').forEach(b => {
+    const name = b.dataset.outfit;
+    const o = OUTFITS.find(x => x.name === name) || customOutfits.find(x => x.name === name);
+    if (!o) return;
+    b.classList.toggle('active', o.pos.length > 0 && o.pos.every(en => selected.includes(en)));
+  });
 }
 
 function applyCharacter(name) {
@@ -1670,7 +1694,9 @@ function renderOutfitSection() {
     const b = document.createElement("button");
     b.type = "button"; b.className = "chip";
     b.textContent = o.name;
-    b.title = "应用：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
+    b.dataset.outfit = o.name;
+    b.classList.toggle('active', o.pos.length > 0 && o.pos.every(en => selected.includes(en)));
+    b.title = (o.pos.length > 0 && o.pos.every(en => selected.includes(en)) ? "取消" : "应用") + "：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
     b.addEventListener("click", () => applyOutfit(o.name));
     box.appendChild(b);
     if (isCustom) {
