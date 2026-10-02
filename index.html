@@ -21,6 +21,7 @@
     --shadow: 0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
     --shadow-lg: 0 8px 24px rgba(16,24,40,.12);
     --radius: 12px;
+    --tabbar-h: 56px;
   }
   [data-theme="dark"] {
     --bg: #0f1115; --card: #171a21; --border: #262b35; --text: #e6e8ee;
@@ -42,19 +43,20 @@
     text-rendering: optimizeLegibility;
   }
   header {
-    position: sticky; top: 0; z-index: 10;
+    position: sticky; top: 0; z-index: 20;
     background: var(--card);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
+    padding: 10px 16px 12px;
     box-shadow: 0 1px 8px rgba(16,24,40,.05);
   }
+  header .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
   header h1 {
-    margin: 0 0 10px; font-size: 18px; font-weight: 700;
+    margin: 0; font-size: 17px; font-weight: 700;
     letter-spacing: 0.2px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .search-wrap { flex: 1 1 200px; min-width: 160px; position: relative; }
   .search-wrap input[type="search"] {
     width: 100%;
@@ -77,13 +79,16 @@
 
   main {
     max-width: 980px; margin: 0 auto;
-    padding: 16px 20px 440px; /* bottom padding so sticky bar doesn't cover last category */
+    padding: 16px 20px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 360px);
   }
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
   details {
     background: var(--card); border: 1px solid var(--border);
     border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
     box-shadow: var(--shadow);
     transition: box-shadow .15s;
+    scroll-margin-top: 128px;
   }
   details[open] { box-shadow: var(--shadow-lg); }
   summary {
@@ -94,10 +99,10 @@
   summary::after { content: "▾"; color: var(--muted); }
   details[open] summary::after { content: "▴"; }
   summary .tag-count { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 9px; padding: 12px 16px 16px; }
   .chip {
-    padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
-    background: var(--card); color: var(--text); font-size: 13px; cursor: pointer; user-select: none;
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--card); color: var(--text); font-size: 14px; cursor: pointer; user-select: none;
     transition: background .12s, border-color .12s, color .12s, transform .12s, box-shadow .12s;
   }
   .chip:hover { background: var(--chip-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
@@ -109,9 +114,9 @@
   .col-btns { display: flex; gap: 6px; }
 
   .result-bar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    position: fixed; left: 0; right: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); z-index: 10;
     background: var(--card); border-top: 1px solid var(--border);
-    padding: 12px 20px; box-shadow: 0 -4px 20px rgba(16,24,40,.08);
+    padding: 10px 16px; box-shadow: 0 -4px 20px rgba(16,24,40,.08);
   }
   .warnings {
     max-width: 980px; margin: 0 auto 8px; padding: 8px 12px;
@@ -158,16 +163,66 @@
   .custom-chip { display: inline-flex; align-items: center; }
   .custom-chip .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 5px; border-radius: 4px; }
   .custom-chip .del:hover { color: #d33; }
+
+  /* ===== 底部 Tab 栏 ===== */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: flex; background: var(--card); border-top: 1px solid var(--border);
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box;
+  }
+  .tabbar button {
+    flex: 1; height: var(--tabbar-h); border: none; background: transparent;
+    color: var(--muted); font-size: 12px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  .tabbar button .ico { font-size: 20px; line-height: 1; }
+  .tabbar button.active { color: var(--accent); font-weight: 600; }
+
+  /* ===== 分类快捷索引 ===== */
+  #cat-nav {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 4px 0 12px; margin-bottom: 4px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  #cat-nav::-webkit-scrollbar { display: none; }
+  #cat-nav button {
+    flex: 0 0 auto; padding: 8px 14px; border: 1px solid var(--border);
+    border-radius: 999px; background: var(--card); color: var(--text);
+    font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  #cat-nav button:active { border-color: var(--accent); color: var(--accent); }
+
+  /* ===== 结果栏动作条 ===== */
+  .action-strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 980px; margin: 0 auto 8px; }
+  .action-strip .grow { flex: 1 1 auto; }
+  .action-strip select {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; background: var(--card); color: var(--text); outline: none;
+  }
+  .import-row { display: flex; gap: 8px; align-items: center; }
+  .import-row input {
+    flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; background: var(--card); color: var(--text); outline: none;
+  }
+
+  /* ===== 图库 ===== */
+  #skeleton-section, #depth-section { background: transparent; border: none; box-shadow: none; margin-bottom: 8px; }
+  #skeleton-section summary, #depth-section summary {
+    cursor: pointer; font-size: 15px; font-weight: 700; color: var(--accent); padding: 6px 2px;
+  }
+  #skeleton-section summary .sub, #depth-section summary .sub { color: var(--muted); font-weight: 400; font-size: 12px; }
+  #skeleton-grid, #depth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+
   @media (max-width: 640px) {
     .result-bar .row { flex-direction: column; }
-    header { padding: 10px 14px; }
-    header h1 { font-size: 16px; margin-bottom: 8px; }
-    .toolbar { gap: 6px; }
+    header { padding: 10px 14px 10px; }
+    header h1 { font-size: 16px; }
+    .toolbar { gap: 8px; }
     .search-wrap { flex: 1 1 100%; min-width: 100%; }
-    .btn { padding: 6px 10px; font-size: 13px; }
+    .btn { padding: 8px 12px; font-size: 13px; min-height: 40px; }
     .count { font-size: 12px; }
-    header .hint { display: none; }
-    main { padding: 12px 14px 500px; }
+    main { padding: 12px 14px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 340px); }
     .result-bar { padding: 8px 12px; }
     .result-bar textarea { min-height: 44px; font-size: 12px; }
   }
@@ -194,55 +249,80 @@ window.__AUTH_MSG = '';
 </head>
 <body>
 <header>
-  <h1>提示词生成器</h1>
+  <div class="top">
+    <h1>提示词生成器</h1>
+    <span class="count" id="count">已选 0</span>
+  </div>
   <div class="toolbar">
     <div class="search-wrap">
       <input type="search" id="search" placeholder="搜索标签（中文 / 英文）">
       <div id="suggest" class="suggest" style="display:none"></div>
     </div>
-    <span class="count" id="count">已选 0</span>
-    <button class="btn" id="undo">↶ 撤销</button>
-    <button class="btn" id="redo">↷ 重做</button>
-    <button class="btn" id="clear">清空</button>
-    <button class="btn" id="random">🎲 随机</button>
-    <button class="btn" id="theme-toggle">🌙</button>
-    <button class="btn" id="fullscreen-toggle">⛶ 全屏</button>
   </div>
-  <div class="hint">左键选/取消 · 右键调权重 · Shift+右键精确权重</div>
 </header>
 
-<!-- 骨骼图库（可折叠） -->
-<details id="skeleton-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
-  <summary style="cursor:pointer; font-size:14px; font-weight:700; color:var(--accent); padding:4px 0; list-style:none;">📁 骨骼图库 <span style="color:var(--muted); font-weight:400; font-size:12px;">（点击折叠/展开 · 缩略图点开看大图 · 下载姿势拿 JSON）</span></summary>
-  <div id="skeleton-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;"></div>
-</details>
+<main>
+  <section id="tab-prompt" class="tab-page active">
+    <div id="cat-nav"></div>
+    <div id="categories"></div>
+  </section>
 
-<!-- 深度图库（可折叠 · 图片由用户自行上传） -->
-<details id="depth-section" style="max-width:980px; margin:0 auto 20px; padding:0 20px;">
-  <summary style="cursor:pointer; font-size:14px; font-weight:700; color:var(--accent); padding:4px 0; list-style:none;">📁 深度图库 <span style="color:var(--muted); font-weight:400; font-size:12px;">（点击折叠/展开 · 缩略图点开看大图 · 下载 PNG）</span></summary>
-  <div id="depth-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:8px;"></div>
-</details>
+  <section id="tab-gallery" class="tab-page">
+    <!-- 骨骼图库（可折叠） -->
+    <details id="skeleton-section">
+      <summary>📁 骨骼图库 <span class="sub">（点击折叠/展开 · 缩略图点开看大图 · 下载姿势拿 JSON）</span></summary>
+      <div id="skeleton-grid"></div>
+    </details>
 
-<main id="categories"></main>
+    <!-- 深度图库（可折叠 · 图片由用户自行上传） -->
+    <details id="depth-section">
+      <summary>📁 深度图库 <span class="sub">（点击折叠/展开 · 缩略图点开看大图 · 下载 PNG）</span></summary>
+      <div id="depth-grid"></div>
+    </details>
+  </section>
 
-<div class="result-bar">
+  <section id="tab-library" class="tab-page">
+    <div id="library-sections"></div>
+    <details id="settings-section">
+      <summary><span>设置</span></summary>
+      <div class="custom-row">
+        <button class="btn" id="theme-toggle">🌙</button>
+        <button class="btn" id="fullscreen-toggle">⛶ 全屏</button>
+      </div>
+    </details>
+  </section>
+</main>
+
+<nav class="tabbar">
+  <button data-tab="prompt" class="active"><span class="ico">🏷</span><span>标签</span></button>
+  <button data-tab="gallery"><span class="ico">🖼</span><span>图库</span></button>
+  <button data-tab="library"><span class="ico">📚</span><span>我的</span></button>
+</nav>
+
+<div class="result-bar" id="result-bar">
   <div id="warnings" class="warnings" style="display:none"></div>
-  <details class="sel-panel" id="sel-panel" open>
-    <summary>已选标签（拖拽排序 · 滑杆调权重）</summary>
-    <div class="sel-list" id="sel-list"></div>
-  </details>
-  <div style="max-width:980px; margin:0 auto 8px; display:flex; align-items:center; gap:8px;">
-    <span class="label" style="background:var(--accent-soft); color:var(--accent);">输出格式</span>
-    <select id="format-select" style="padding:5px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); outline:none;">
+  <div class="action-strip">
+    <button class="btn" id="undo" title="撤销">↶</button>
+    <button class="btn" id="redo" title="重做">↷</button>
+    <button class="btn" id="clear">清空</button>
+    <button class="btn" id="random">🎲 随机</button>
+    <span class="grow"></span>
+    <select id="format-select" title="输出格式">
       <option value="weight">(tag:1.2) 权重</option>
       <option value="plain">纯标签（无权重）</option>
     </select>
   </div>
-  <div style="max-width:980px; margin:0 auto 8px; display:flex; align-items:center; gap:8px;">
-    <span class="label" style="background:var(--accent-soft); color:var(--accent);">导入</span>
-    <input id="import-input" type="text" placeholder="粘贴已有提示词（用 --neg 分隔负面），如 1girl, no pants --neg lowres, bad hands" style="flex:1; padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; background:var(--card); color:var(--text); outline:none;">
-    <button class="btn primary" id="import-btn">导入</button>
-  </div>
+  <details class="sel-panel" id="sel-panel" open>
+    <summary>已选标签（拖拽排序 · 滑杆调权重）</summary>
+    <div class="sel-list" id="sel-list"></div>
+  </details>
+  <details class="sel-panel" id="import-panel">
+    <summary>导入提示词（用 --neg 分隔负面）</summary>
+    <div class="import-row">
+      <input id="import-input" type="text" placeholder="如 1girl, no pants --neg lowres, bad hands">
+      <button class="btn primary" id="import-btn">导入</button>
+    </div>
+  </details>
   <div class="row">
     <div class="result-col">
       <div class="col-head"><span class="label pos">正面</span><span class="col-btns"><button class="btn primary" id="copy-pos">复制</button><button class="btn" id="copy-all">合并复制</button></span></div>
@@ -828,6 +908,7 @@ const CHARACTERS = [
   }
 ];
 const mainEl = document.getElementById("categories");
+const librarySectionsEl = document.getElementById("library-sections");
 const resultPosEl = document.getElementById("result-pos");
 const resultNegEl = document.getElementById("result-neg");
 const countEl = document.getElementById("count");
@@ -1212,7 +1293,7 @@ function renderCustomSection() {
   hint.className = "hint"; hint.style.padding = "0 16px 12px";
   hint.textContent = "普通标签：填英文 + 选分类 → 出现在对应分类里（带 × 可删）";
   details.appendChild(hint);
-  mainEl.insertBefore(details, mainEl.firstChild);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
 }
 
 function renderTriggerSection() {
@@ -1220,6 +1301,7 @@ function renderTriggerSection() {
   if (old) old.remove();
   const details = document.createElement("details");
   details.id = "trigger-section";
+  details.dataset.cat = "LoRA 触发词";
   details.open = true;
   const summary = document.createElement("summary");
   summary.innerHTML = "<span>LoRA 触发词</span><span class='tag-count'>" + triggerWords.length + " 个</span>";
@@ -1357,7 +1439,7 @@ function renderPresetSection() {
     list.appendChild(box);
   });
   details.appendChild(list);
-  mainEl.insertBefore(details, mainEl.firstChild);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
 }
 
 function savePreset() {
@@ -1572,7 +1654,7 @@ function renderOutfitSection() {
   OUTFITS.forEach(o => renderOne(o, false));
   customOutfits.forEach(o => renderOne(o, true));
   details.appendChild(list);
-  mainEl.insertBefore(details, mainEl.firstChild);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
 }
 
 function addCustomCharacter() {
@@ -1644,7 +1726,7 @@ function renderCharacterSection() {
   CHARACTERS.forEach(c => renderOne(c, false));
   customCharacters.forEach(c => renderOne(c, true));
   details.appendChild(list);
-  mainEl.insertBefore(details, mainEl.firstChild);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
 }
 
 function applyTemplate(name) {
@@ -1723,7 +1805,7 @@ function renderTemplateSection() {
   TEMPLATES.forEach(o => renderOne(o, false));
   customTemplates.forEach(o => renderOne(o, true));
   details.appendChild(list);
-  mainEl.insertBefore(details, mainEl.firstChild);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
 }
 
 const SYNONYMS = {
@@ -1804,6 +1886,7 @@ function renderFavoriteSection() {
   if (old) old.remove();
   const details = document.createElement("details");
   details.id = "favorite-section";
+  details.dataset.cat = "收藏";
   details.open = false;
   const summary = document.createElement("summary");
   summary.innerHTML = "<span>收藏</span><span class='tag-count'>" + favorites.length + " 个</span>";
@@ -1922,6 +2005,36 @@ resultNegEl.addEventListener("click", () => resultNegEl.select());
 
 document.getElementById("format-select").value = outputFormat;
 
+// ============ Tab 切换 ============
+function switchTab(name) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+  document.querySelectorAll('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  const bar = document.getElementById('result-bar');
+  if (bar) bar.style.display = (name === 'prompt') ? '' : 'none';
+  try { localStorage.setItem('pg_tab', name); } catch (e) {}
+}
+document.querySelectorAll('.tabbar button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+// ============ 分类快捷索引 ============
+function buildCatNav() {
+  const nav = document.getElementById('cat-nav');
+  if (!nav) return;
+  nav.innerHTML = '';
+  const names = ['收藏', 'LoRA 触发词'].concat(CATEGORIES.map(c => c.name));
+  names.forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = name;
+    b.addEventListener('click', () => {
+      const el = document.querySelector('details[data-cat="' + name + '"]');
+      if (!el) return;
+      el.open = true;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    nav.appendChild(b);
+  });
+}
+
 initTheme();
 buildCategories();
 renderCustomSection();
@@ -1931,7 +2044,13 @@ renderTemplateSection();
 renderTriggerSection();
 renderCharacterSection();
 renderFavoriteSection();
+buildCatNav();
 render();
+
+// 恢复上次 Tab
+let startTab = 'prompt';
+try { startTab = localStorage.getItem('pg_tab') || 'prompt'; } catch (e) {}
+switchTab(startTab);
 </script>
 <script>
 // 骨骼清单（内嵌，避免 Mini App 里 fetch 挂起）
