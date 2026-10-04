@@ -610,7 +610,7 @@ const CATEGORIES = [
       {zh:"插兜", en:"hands in pockets"}, {zh:"摊手", en:"open hands"},
       {zh:"中指", en:"middle finger"}, {zh:"手指比心", en:"finger heart"}, {zh:"双手比心", en:"hand heart"},
       {zh:"OK手势", en:"ok sign"}, {zh:"握手", en:"handshake"}, {zh:"捂嘴", en:"hand over mouth"},
-      {zh:"摸头", en:"hand on head"}, {zh:"摸脸", en:"hand on face"}, {zh:"十指紧扣", en:"interlocked fingers"},
+      {zh:"摸头", en:"hand on head"}, {zh:"摸脸", en:"hand on face"}, {zh:"手撑墙", en:"hand on wall"}, {zh:"十指紧扣", en:"interlocked fingers"},
       {zh:"牵手", en:"holding hands"}, {zh:"握车把", en:"holding handlebars"}, {zh:"勾手指", en:"beckoning"}, {zh:"噤声", en:"shh"}, {zh:"手指抵唇", en:"finger to lips"}, {zh:"食指竖立", en:"index finger raised"}
     ]
   },
@@ -682,7 +682,7 @@ const CATEGORIES = [
       {zh:"歪头", en:"head tilt"}, {zh:"坐桌上", en:"on desk"}, {zh:"腿朝镜头", en:"legs toward viewer"},
       {zh:"脚趾", en:"toes"}, {zh:"踮脚", en:"tiptoe"},
       {zh:"蜷脚趾", en:"curled toes"}, {zh:"并脚", en:"feet together"}, {zh:"抬脚", en:"raised foot"},
-      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"弯腰", en:"bent over"}, {zh:"前倾", en:"leaning forward"}, {zh:"弓背后仰", en:"arch back"}, {zh:"大字躺", en:"spread eagle"}, {zh:"手枕脑后", en:"arms behind head"}
+      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"弯腰", en:"bent over"}, {zh:"前倾", en:"leaning forward"}, {zh:"靠墙", en:"against wall"}, {zh:"弓背后仰", en:"arch back"}, {zh:"大字躺", en:"spread eagle"}, {zh:"手枕脑后", en:"arms behind head"}
     ]
   },
   {
@@ -693,7 +693,7 @@ const CATEGORIES = [
       {zh:"雨天", en:"rain"}, {zh:"雪", en:"snow"}, {zh:"水中", en:"water"},
       {zh:"天空", en:"sky"}, {zh:"窗边", en:"window"}, {zh:"床", en:"bed"},
       {zh:"简单背景", en:"simple background"}, {zh:"白背景", en:"white background"}, {zh:"渐变背景", en:"gradient background"},
-      {zh:"空地板", en:"empty floor"}, {zh:"干净地板", en:"clean floor"}, {zh:"干净背景", en:"clean background"}, {zh:"简单地板", en:"simple floor"}, {zh:"宽敞", en:"spacious"}, {zh:"极简背景", en:"minimalist background"}, {zh:"优雅室内", en:"elegant interior"}, {zh:"大理石地板", en:"marble floor"},
+      {zh:"空地板", en:"empty floor"}, {zh:"干净地板", en:"clean floor"}, {zh:"干净背景", en:"clean background"}, {zh:"简单地板", en:"simple floor"}, {zh:"宽敞", en:"spacious"}, {zh:"极简背景", en:"minimalist background"}, {zh:"优雅室内", en:"elegant interior"}, {zh:"大理石地板", en:"marble floor"}, {zh:"木地板", en:"wooden floor"},
       {zh:"风景", en:"scenery"}, {zh:"城市", en:"cityscape"},
       {zh:"天台", en:"rooftop"}, {zh:"公园", en:"park"}, {zh:"街道", en:"street"}, {zh:"小巷", en:"alley"}, {zh:"后巷", en:"back alley"}, {zh:"赛道", en:"race track"}, {zh:"维修区", en:"pit lane"},
       {zh:"泳池", en:"pool"}, {zh:"图书馆", en:"library"}, {zh:"厨房", en:"kitchen"},
@@ -1050,6 +1050,7 @@ const TEMPLATES = [
   { name: "低机位胸特写·自拍·更近", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","from below","worm's eye view","extreme low angle","wide angle","extreme close-up","upper body","perspective","foreshortening","looking down at viewer","selfie","holding phone","lying","on back","night","indoors","bedroom","depth of field","blurry background","soft lighting"], neg: [], w: { "extreme close-up":1.2, "foreshortening":1.2 } },
   { name: "脚底板特写", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","barefoot","feet","toes","sole","sole focus","foot focus","close-up","macro","from below","worm's eye view","detailed feet","detailed toes","depth of field","bokeh","soft lighting","clean background","simple background"], neg: [], w: { "sole focus":1.2, "macro":1.2 } },
   { name: "抬脚朝镜头·脸俯视", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","sitting","crossed legs","legs up","raised foot","barefoot","toes","foot focus","sole","looking down at viewer","from below","worm's eye view","detailed feet","detailed toes","depth of field","bokeh","soft lighting","clean background","simple background"], neg: [], w: { "foot focus":1.2, "from below":1.2 } },
+  { name: "面壁前俯·撅臀踮脚", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","standing","bent over","leaning forward","against wall","hand on wall","arm up","spread legs","tiptoe","arch back","ass","from behind","back view","profile","looking down","full body","indoors","room","wooden floor","sunlight","shadow","depth of field","bokeh","soft lighting"], neg: [], w: { "from behind":1.2, "bent over":1.2 } },
 ];
 
 // 内置角色预设（点击套用完整角色底：触发词 + 外貌 + 服装 + 质量/手部标签）
