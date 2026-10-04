@@ -677,7 +677,7 @@ const CATEGORIES = [
       {zh:"书店", en:"bookstore"}, {zh:"博物馆", en:"museum"}, {zh:"电影院", en:"movie theater"},
       {zh:"舞台", en:"stage"}, {zh:"游乐园", en:"amusement park"}, {zh:"摩天轮", en:"ferris wheel"},
       {zh:"水族馆", en:"aquarium"},
-      {zh:"神社", en:"shrine"}, {zh:"教堂", en:"church"}, {zh:"城堡", en:"castle"},
+      {zh:"神社", en:"shrine"}, {zh:"鸟居", en:"torii"}, {zh:"教堂", en:"church"}, {zh:"城堡", en:"castle"},
       {zh:"宫殿", en:"palace"}, {zh:"桥", en:"bridge"}, {zh:"码头", en:"pier"},
       {zh:"港口", en:"harbor"}, {zh:"山", en:"mountain"}, {zh:"沙漠", en:"desert"},
       {zh:"洞穴", en:"cave"}, {zh:"瀑布", en:"waterfall"}, {zh:"河流", en:"river"},
@@ -958,6 +958,7 @@ const OUTFITS = [
   { name: "军装", pos: ["military uniform","hat","gloves","boots"], neg: [], w: {} },
   { name: "婚纱", pos: ["wedding dress","veil","bouquet"], neg: [], w: {} },
   { name: "巫女服", pos: ["miko","hair ribbon","white dress"], neg: [], w: {} },
+  { name: "OL秘书装", pos: ["pencil skirt","white shirt","pantyhose","high heels"], neg: [], w: { "pencil skirt":1.2 } },
 ];
 
 // 内置快捷模板（点击清空当前选中并套用整套）
@@ -966,6 +967,7 @@ const TEMPLATES = [
   { name: "头像特写", pos: ["masterpiece","best quality","1girl","solo","close-up","face focus","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
   { name: "半身照", pos: ["masterpiece","best quality","1girl","solo","upper body","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
   { name: "NSFW裸体", pos: ["masterpiece","best quality","1girl","solo","completely nude","spread legs","blush","looking at viewer"], neg: ["loli","child"], w: {masterpiece:1.2, "best quality":1.2} },
+  { name: "神社夜樱·仰望星空", pos: ["masterpiece","best quality","1girl","solo","full body","standing","looking up","looking at the sky","night","night sky","starry sky","stars","milky way","moonlight","shrine","torii","cherry blossoms","falling petals","stone lantern","lantern light","rim light","atmospheric perspective","depth of field","bokeh"], neg: ["text","overexposed","oversaturated"], w: { "starry sky":1.2, "cherry blossoms":1.2 } },
 ];
 
 // 内置角色预设（点击套用完整角色底：触发词 + 外貌 + 服装 + 质量/手部标签）
@@ -977,6 +979,15 @@ const CHARACTERS = [
           "red eyes","empty eyes","half-closed eyes","medium breasts","maid","maid headdress",
           "detailed face","detailed eyes","detailed hands","detailed fingers","perfect hands","five fingers"],
     w: { twintails:1.2, "red eyes":1.2 }
+  },
+  {
+    name: "白金（Hakkin）",
+    trigger: "shatangjiang",
+    pos: ["masterpiece","best quality","1girl","solo","tall","mature female","large breasts","narrow waist","slim waist","wide hips","long legs",
+          "silver hair","long hair","wavy hair","parted hair","gold eyes","slim face","angular face","long face",
+          "pencil skirt","white shirt","pantyhose","high heels",
+          "detailed face","detailed eyes","detailed hands","detailed fingers","perfect hands","five fingers"],
+    w: { "silver hair":1.2, "gold eyes":1.2 }
   }
 ];
 const mainEl = document.getElementById("categories");
