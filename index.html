@@ -227,18 +227,17 @@
   @media (min-width: 900px) {
     #tab-prompt.active {
       display: grid;
-      grid-template-columns: 200px minmax(0, 1fr);
+      grid-template-columns: 190px minmax(0, 1fr);
       gap: 16px;
       align-items: start;
     }
     #cat-nav {
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       overflow-x: visible;
-      overflow-y: auto;
+      overflow-y: visible;
       position: sticky;
       top: 8px;
-      max-height: calc(100vh - 32px);
       padding: 0;
       margin: 0;
     }
@@ -246,7 +245,8 @@
       width: 100%;
       text-align: left;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
+      font-size: 12px;
       white-space: normal;
       flex: 0 0 auto;
     }
