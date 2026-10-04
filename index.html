@@ -22,6 +22,7 @@
     --shadow-lg: 0 8px 24px rgba(16,24,40,.12);
     --radius: 12px;
     --tabbar-h: 56px;
+    --header-h: 100px;
   }
   [data-theme="dark"] {
     --bg: #0f1115; --card: #171a21; --border: #262b35; --text: #e6e8ee;
@@ -226,14 +227,16 @@
   /* ===== 响应式：宽屏侧边栏，窄屏顶部横栏 ===== */
   @media (min-width: 900px) {
     #tab-prompt.active {
-      padding-left: 206px;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
     }
     .cat-nav-wrap {
-      position: fixed;
-      top: 16px;
-      left: max(20px, calc((100vw - 980px) / 2 + 20px));
-      width: 190px;
-      height: calc(100vh - 32px);
+      position: sticky;
+      top: calc(var(--header-h) + 12px);
+      align-self: start;
+      height: calc(100vh - var(--header-h) - var(--tabbar-h) - 36px);
       overflow-y: auto;
     }
     #cat-nav {
