@@ -223,6 +223,35 @@
   }
   #cat-nav button:active { border-color: var(--accent); color: var(--accent); }
 
+  /* ===== 响应式：宽屏侧边栏，窄屏顶部横栏 ===== */
+  @media (min-width: 900px) {
+    #tab-prompt.active {
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    #cat-nav {
+      flex-direction: column;
+      gap: 6px;
+      overflow-x: visible;
+      overflow-y: auto;
+      position: sticky;
+      top: 8px;
+      max-height: calc(100vh - 32px);
+      padding: 0;
+      margin: 0;
+    }
+    #cat-nav button {
+      width: 100%;
+      text-align: left;
+      border-radius: 8px;
+      padding: 8px 12px;
+      white-space: normal;
+      flex: 0 0 auto;
+    }
+  }
+
   /* ===== 结果栏动作条 ===== */
   .action-strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 980px; margin: 0 auto 8px; }
   .action-strip .grow { flex: 1 1 auto; }
