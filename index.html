@@ -226,15 +226,13 @@
   /* ===== 响应式：宽屏侧边栏，窄屏顶部横栏 ===== */
   @media (min-width: 900px) {
     #tab-prompt.active {
-      display: grid;
-      grid-template-columns: 190px minmax(0, 1fr);
-      gap: 16px;
-      align-items: start;
+      padding-left: 206px;
     }
     .cat-nav-wrap {
-      position: sticky;
+      position: fixed;
       top: 16px;
-      align-self: start;
+      left: max(20px, calc((100vw - 980px) / 2 + 20px));
+      width: 190px;
       height: calc(100vh - 32px);
       overflow-y: auto;
     }
