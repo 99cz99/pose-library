@@ -231,16 +231,19 @@
       gap: 16px;
       align-items: start;
     }
-    #cat-nav {
+    .cat-nav-wrap {
       position: sticky;
       top: 16px;
       align-self: start;
       height: calc(100vh - 32px);
       overflow-y: auto;
+    }
+    #cat-nav {
       flex-direction: column;
       gap: 6px;
       padding: 0;
       margin: 0;
+      overflow-x: visible;
     }
     #cat-nav button {
       width: 100%;
@@ -327,7 +330,7 @@ window.__AUTH_MSG = '';
 
 <main>
   <section id="tab-prompt" class="tab-page active">
-    <div id="cat-nav"></div>
+    <div class="cat-nav-wrap"><div id="cat-nav"></div></div>
     <div id="categories"></div>
   </section>
 
