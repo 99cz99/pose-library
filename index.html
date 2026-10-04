@@ -412,7 +412,7 @@ const CATEGORIES = [
       {zh:"杰作", en:"masterpiece"}, {zh:"最高画质", en:"best quality"}, {zh:"高质量", en:"high quality"},
       {zh:"高分辨率", en:"highres"}, {zh:"超高清", en:"absurdres"}, {zh:"超精细", en:"ultra-detailed"},
       {zh:"细节丰富", en:"intricate details"}, {zh:"锐聚焦", en:"sharp focus"}, {zh:"景深", en:"depth of field"},
-      {zh:"散景", en:"bokeh"}, {zh:"柔和光", en:"soft lighting"}, {zh:"轮廓光", en:"rim light"},
+      {zh:"散景", en:"bokeh"}, {zh:"模糊背景", en:"blurry background"}, {zh:"柔和光", en:"soft lighting"}, {zh:"轮廓光", en:"rim light"},
       {zh:"体积光", en:"volumetric lighting"}, {zh:"逆光", en:"backlighting"}, {zh:"戏剧光", en:"dramatic lighting"}, {zh:"明暗对照", en:"chiaroscuro"}, {zh:"上帝光", en:"god rays"}, {zh:"烛光", en:"candlelight"}, {zh:"阳光", en:"sunlight"}, {zh:"昏暗", en:"dimly lit"}, {zh:"氛围光", en:"mood lighting"}, {zh:"冷暖对比光", en:"cold and warm lighting"}, {zh:"空气透视", en:"atmospheric perspective"}, {zh:"暖光", en:"warm light"}, {zh:"灯笼光", en:"lantern light"}, {zh:"星光", en:"starlight"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
       {zh:"精细手", en:"detailed hands"}, {zh:"五指分明", en:"five fingers"}, {zh:"精细", en:"detailed"},
       {zh:"精细下体", en:"detailed pussy"}, {zh:"精细臀部", en:"detailed ass"}, {zh:"精细乳头", en:"detailed nipples"},
@@ -598,7 +598,7 @@ const CATEGORIES = [
       {zh:"唱歌", en:"singing"}, {zh:"飞", en:"flying"}, {zh:"祈祷", en:"praying"},
       {zh:"拿鞋", en:"holding shoe"},
       {zh:"骑车", en:"riding bicycle"}, {zh:"骑摩托", en:"riding motorcycle"}, {zh:"开车", en:"driving"}, {zh:"赛车竞速", en:"racing"}, {zh:"写字", en:"writing"}, {zh:"画画", en:"drawing"},
-      {zh:"弹奏", en:"playing instrument"}, {zh:"打游戏", en:"gaming"}, {zh:"拍照", en:"taking photo"},
+      {zh:"弹奏", en:"playing instrument"}, {zh:"打游戏", en:"gaming"}, {zh:"拍照", en:"taking photo"}, {zh:"自拍", en:"selfie"},
       {zh:"打电话", en:"on phone"}, {zh:"蹲下", en:"crouching"}, {zh:"爬", en:"climbing"},
       {zh:"踢腿", en:"kicking"}, {zh:"爬行", en:"crawling"}, {zh:"瑜伽", en:"yoga"}, {zh:"运动", en:"exercising"}
     ]
@@ -722,10 +722,10 @@ const CATEGORIES = [
   },
   {
     name: "构图镜头", tags: [
-      {zh:"半身", en:"cowboy shot"}, {zh:"斜角", en:"dutch angle"}, {zh:"广角", en:"wide shot"},
+      {zh:"半身", en:"cowboy shot"}, {zh:"斜角", en:"dutch angle"}, {zh:"广角", en:"wide shot"}, {zh:"广角镜头", en:"wide angle"},
       {zh:"肖像", en:"portrait"}, {zh:"鸟瞰", en:"bird's eye view"}, {zh:"过肩", en:"over-the-shoulder"},
       {zh:"横构图", en:"landscape"},
-      {zh:"竖构图", en:"vertical"}, {zh:"中景", en:"medium shot"}, {zh:"全景", en:"full shot"}, {zh:"全身", en:"full body"}, {zh:"上半身", en:"upper body"}, {zh:"透视缩短", en:"foreshortening"},
+      {zh:"竖构图", en:"vertical"}, {zh:"中景", en:"medium shot"}, {zh:"全景", en:"full shot"}, {zh:"全身", en:"full body"}, {zh:"上半身", en:"upper body"}, {zh:"透视缩短", en:"foreshortening"}, {zh:"透视", en:"perspective"},
       {zh:"对称构图", en:"symmetry"}, {zh:"中心构图", en:"centered composition"}, {zh:"三分法", en:"rule of thirds"},
       {zh:"留白", en:"negative space"}, {zh:"对角线构图", en:"diagonal composition"}, {zh:"长焦", en:"telephoto"},
       {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}
@@ -736,7 +736,7 @@ const CATEGORIES = [
       {zh:"看向别处", en:"looking away"}, {zh:"目视前方", en:"looking ahead"}, {zh:"抬头看", en:"looking up"}, {zh:"低头看", en:"looking down"}, {zh:"俯视观者", en:"looking down at viewer"}, {zh:"仰视观者", en:"looking up at viewer"}, {zh:"看向一侧", en:"looking to the side"}, {zh:"看向镜头", en:"looking at viewer"}, {zh:"回头看", en:"looking back"}, {zh:"背面", en:"from behind"}, {zh:"侧脸", en:"profile"},
       {zh:"侧面", en:"from side"}, {zh:"正面", en:"seen from front"}, {zh:"四分之三侧", en:"three-quarter view"},
       {zh:"正俯视", en:"top-down"}, {zh:"俯视", en:"from above"}, {zh:"仰视", en:"from below"}, {zh:"极端仰视", en:"worm's eye view"}, {zh:"高角度", en:"high angle"},
-      {zh:"低角度", en:"low angle"}, {zh:"第一人称", en:"first-person view"}, {zh:"主观视角", en:"pov"},
+      {zh:"低角度", en:"low angle"}, {zh:"极端低角度", en:"extreme low angle"}, {zh:"第一人称", en:"first-person view"}, {zh:"主观视角", en:"pov"},
       {zh:"第一人称手", en:"pov hands"}, {zh:"镜头前的手", en:"hands from viewer"}
     ]
   },
@@ -1045,6 +1045,9 @@ const TEMPLATES = [
   { name: "半身照", pos: ["masterpiece","best quality","1girl","solo","upper body","looking at viewer","simple background"], neg: [], w: {masterpiece:1.2, "best quality":1.2} },
   { name: "NSFW裸体", pos: ["masterpiece","best quality","1girl","solo","completely nude","spread legs","blush","looking at viewer"], neg: ["loli","child"], w: {masterpiece:1.2, "best quality":1.2} },
   { name: "神社夜樱·仰望星空", pos: ["masterpiece","best quality","1girl","solo","full body","standing","looking up","looking at the sky","night","night sky","starry sky","stars","milky way","moonlight","shrine","torii","cherry blossoms","falling petals","stone lantern","lantern light","rim light","atmospheric perspective","depth of field","bokeh"], neg: ["text","overexposed","oversaturated"], w: { "starry sky":1.2, "cherry blossoms":1.2 } },
+  { name: "低机位胸特写·自拍", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","from below","low angle","close-up","upper body","perspective","foreshortening","looking down at viewer","selfie","holding phone","lying","on back","night","indoors","bedroom","depth of field","blurry background","soft lighting"], neg: [], w: { "from below":1.2, "foreshortening":1.2 } },
+  { name: "低机位胸特写·自拍·超低角", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","from below","worm's eye view","extreme low angle","wide angle","close-up","upper body","perspective","foreshortening","looking down at viewer","selfie","holding phone","lying","on back","night","indoors","bedroom","depth of field","blurry background","soft lighting"], neg: [], w: { "worm's eye view":1.2, "foreshortening":1.2 } },
+  { name: "低机位胸特写·自拍·更近", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","from below","worm's eye view","extreme low angle","wide angle","extreme close-up","upper body","perspective","foreshortening","looking down at viewer","selfie","holding phone","lying","on back","night","indoors","bedroom","depth of field","blurry background","soft lighting"], neg: [], w: { "extreme close-up":1.2, "foreshortening":1.2 } },
 ];
 
 // 内置角色预设（点击套用完整角色底：触发词 + 外貌 + 服装 + 质量/手部标签）
