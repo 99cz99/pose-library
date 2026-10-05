@@ -544,7 +544,7 @@ const CATEGORIES = [
       {zh:"棕眼", en:"brown eyes"}, {zh:"金瞳", en:"gold eyes"}, {zh:"异色瞳", en:"heterochromia"}, {zh:"心形瞳", en:"heart-shaped pupils"},
       {zh:"符号瞳", en:"symbol-shaped pupils"}, {zh:"星形瞳", en:"star-shaped pupils"}, {zh:"竖瞳", en:"slit pupils"},
       {zh:"渐变瞳", en:"gradient eyes"}, {zh:"睁眼", en:"open eyes"}, {zh:"闭眼", en:"closed eyes"},
-      {zh:"发间露眼", en:"eyes visible through hair"}, {zh:"半闭眼", en:"half-closed eyes"}, {zh:"呆滞眼", en:"tsukkomi"},
+      {zh:"发间露眼", en:"eyes visible through hair"}, {zh:"半闭眼", en:"half-closed eyes"}, {zh:"呆滞眼", en:"blank eyes"},
       {zh:"瞪大眼", en:"wide-eyed"}, {zh:"充血眼", en:"bloodshot eyes"}, {zh:"空洞眼", en:"empty eyes"},
       {zh:"眼影", en:"eyeshadow"}, {zh:"睫毛", en:"eyelashes"}, {zh:"粗眉", en:"thick eyebrows"},
       {zh:"眉毛", en:"eyebrows"}, {zh:"彩色睫毛", en:"colored eyelashes"}, {zh:"发光眼", en:"glowing eyes"}
@@ -680,9 +680,9 @@ const CATEGORIES = [
       {zh:"劈叉", en:"split"}, {zh:"站立劈叉", en:"standing split"}, {zh:"竖向劈叉", en:"vertical split"}, {zh:"单腿抬起", en:"one leg raised"}, {zh:"腿张开", en:"legs apart"}, {zh:"并腿", en:"legs together"}, {zh:"举手", en:"arms up"},
       {zh:"手背身后", en:"arms behind back"}, {zh:"叉腰", en:"hand on hip"}, {zh:"手肘搭扶手", en:"elbow on armrest"}, {zh:"看窗外", en:"looking out window"},
       {zh:"歪头", en:"head tilt"}, {zh:"坐桌上", en:"on desk"}, {zh:"腿朝镜头", en:"legs toward viewer"},
-      {zh:"脚趾", en:"toes"}, {zh:"踮脚", en:"tiptoe"},
+      {zh:"脚趾", en:"toes"}, {zh:"踮脚", en:"tiptoes"},
       {zh:"蜷脚趾", en:"curled toes"}, {zh:"并脚", en:"feet together"}, {zh:"抬脚", en:"raised foot"},
-      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"弯腰", en:"bent over"}, {zh:"前倾", en:"leaning forward"}, {zh:"靠墙", en:"against wall"}, {zh:"弓背后仰", en:"arch back"}, {zh:"大字躺", en:"spread eagle"}, {zh:"手枕脑后", en:"arms behind head"}
+      {zh:"交叠脚踝", en:"crossed ankles"}, {zh:"弯腰", en:"bent over"}, {zh:"前倾", en:"leaning forward"}, {zh:"靠墙", en:"against wall"}, {zh:"弓背后仰", en:"arched back"}, {zh:"大字躺", en:"spread eagle"}, {zh:"手枕脑后", en:"arms behind head"}
     ]
   },
   {
@@ -1050,7 +1050,7 @@ const TEMPLATES = [
   { name: "低机位胸特写·自拍·更近", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","from below","worm's eye view","extreme low angle","wide angle","extreme close-up","upper body","perspective","foreshortening","looking down at viewer","selfie","holding phone","lying","on back","night","indoors","bedroom","depth of field","blurry background","soft lighting"], neg: [], w: { "extreme close-up":1.2, "foreshortening":1.2 } },
   { name: "脚底板特写", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","barefoot","feet","toes","sole","sole focus","foot focus","close-up","macro","from below","worm's eye view","detailed feet","detailed toes","depth of field","bokeh","soft lighting","clean background","simple background"], neg: [], w: { "sole focus":1.2, "macro":1.2 } },
   { name: "抬脚朝镜头·脸俯视", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","sitting","crossed legs","legs up","raised foot","barefoot","toes","foot focus","sole","looking down at viewer","from below","worm's eye view","detailed feet","detailed toes","depth of field","bokeh","soft lighting","clean background","simple background"], neg: [], w: { "foot focus":1.2, "from below":1.2 } },
-  { name: "面壁前俯·撅臀踮脚", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","standing","bent over","leaning forward","against wall","hand on wall","arm up","spread legs","tiptoe","arch back","ass","from behind","back view","profile","looking down","full body","indoors","room","wooden floor","sunlight","shadow","depth of field","bokeh","soft lighting"], neg: [], w: { "from behind":1.2, "bent over":1.2 } },
+  { name: "面壁前俯·撅臀踮脚", pos: ["very aesthetic","masterpiece","best quality","1girl","solo","standing","bent over","leaning forward","against wall","hand on wall","arm up","spread legs","tiptoes","arched back","ass","from behind","profile","looking down","full body","indoors","room","wooden floor","sunlight","shadow","depth of field","bokeh","soft lighting"], neg: [], w: { "from behind":1.2, "bent over":1.2 } },
 ];
 
 // 内置角色预设（点击套用完整角色底：触发词 + 外貌 + 服装 + 质量/手部标签）
