@@ -1364,7 +1364,7 @@ function makeTagChip(t, opts) {
 }
 
 function parseTags(str) {
-  return (str || "").split(/[,，]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+  return (str || "").split(/[,，]/).map(s => s.trim().replace(/\s+/g, " ").toLowerCase()).filter(Boolean);
 }
 
 function importPrompt() {
