@@ -541,6 +541,7 @@ const CATEGORIES = [
       {zh:"浅蓝发", en:"light blue hair"}, {zh:"深蓝发", en:"dark blue hair"}, {zh:"浅棕发", en:"light brown hair"},
       {zh:"浅紫发", en:"light purple hair"},
       {zh:"渐变发", en:"gradient hair"},
+      {zh:"双色发", en:"two-tone hair"}, {zh:"内层挑染", en:"colored inner hair"},
     ]
   },
   {
@@ -1008,7 +1009,7 @@ function rebuildCustomNeg() { customNegEn.clear(); customTags.forEach(t => { if 
 
 // 冲突/冗余互斥组（组内同时选中 2+ 个即告警）
 const CONFLICT_GROUPS = [
-  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair","gradient hair"] },
+  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair","gradient hair","two-tone hair","colored inner hair"] },
   { name: "发长", tags: ["long hair","very long hair","medium hair","short hair"] },
   { name: "眼色", tags: ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes","gold eyes"] },
   { name: "室内外", tags: ["indoors","outdoors"] },
@@ -1353,7 +1354,7 @@ const HAIR_COLORS = {
   "black hair":"#2a2a2e","red hair":"#c0453a","pink hair":"#f3a6c8","blue hair":"#4a7fd4",
   "purple hair":"#9b59b6","green hair":"#3fa66a","multicolored hair":null,"grey hair":"#8a8f98",
   "aqua hair":"#5fd4d4","orange hair":"#f0a35a","light blue hair":"#9fc8f0","dark blue hair":"#2f4a8a",
-  "light brown hair":"#b08968","light purple hair":"#c9a7eb","gradient hair":"linear-gradient(90deg,#7ba9e8,#f3a6c8)"
+  "light brown hair":"#b08968","light purple hair":"#c9a7eb","gradient hair":"linear-gradient(90deg,#7ba9e8,#f3a6c8)","two-tone hair":"linear-gradient(90deg,#2a2a2e 50%,#f2d675 50%)","colored inner hair":"linear-gradient(180deg,#2a2a2e 55%,#7ba9e8 45%)"
 };
 
 function applySwatch(b, en) {
