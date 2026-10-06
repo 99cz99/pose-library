@@ -527,6 +527,12 @@ const CATEGORIES = [
       {zh:"发丝遮眼", en:"hair between eyes"}, {zh:"波浪发", en:"wavy hair"}, {zh:"直发", en:"straight hair"},
       {zh:"卷发", en:"curly hair"}, {zh:"乱发", en:"messy hair"}, {zh:"发饰", en:"hair ornament"},
       {zh:"花饰", en:"hair flower"}, {zh:"发带", en:"hair ribbon"},
+      {zh:"鬓发", en:"sidelocks"}, {zh:"双麻花辫", en:"twin braids"}, {zh:"钻头卷", en:"drill hair"},
+      {zh:"姬发式", en:"hime cut"}, {zh:"齐刘海", en:"blunt bangs"}, {zh:"单眼遮发", en:"hair over one eye"},
+      {zh:"侧分刘海", en:"swept bangs"}, {zh:"中分", en:"parted hair"}, {zh:"不对称发", en:"asymmetrical hair"},
+      {zh:"漂浮发", en:"floating hair"}, {zh:"侧吸发", en:"hair intakes"}, {zh:"发夹", en:"hairclip"},
+      {zh:"发箍", en:"hairband"}, {zh:"编马尾", en:"braided ponytail"}, {zh:"花冠辫", en:"crown braid"},
+      {_h:"发色"},
       {zh:"白发", en:"white hair"}, {zh:"金发", en:"blonde hair"}, {zh:"棕发", en:"brown hair"},
       {zh:"黑发", en:"black hair"}, {zh:"红发", en:"red hair"}, {zh:"粉发", en:"pink hair"},
       {zh:"蓝发", en:"blue hair"}, {zh:"紫发", en:"purple hair"}, {zh:"绿发", en:"green hair"},
@@ -534,11 +540,6 @@ const CATEGORIES = [
       {zh:"灰发", en:"grey hair"}, {zh:"水色发", en:"aqua hair"}, {zh:"橙发", en:"orange hair"},
       {zh:"浅蓝发", en:"light blue hair"}, {zh:"深蓝发", en:"dark blue hair"}, {zh:"浅棕发", en:"light brown hair"},
       {zh:"浅紫发", en:"light purple hair"},
-      {zh:"鬓发", en:"sidelocks"}, {zh:"双麻花辫", en:"twin braids"}, {zh:"钻头卷", en:"drill hair"},
-      {zh:"姬发式", en:"hime cut"}, {zh:"齐刘海", en:"blunt bangs"}, {zh:"单眼遮发", en:"hair over one eye"},
-      {zh:"侧分刘海", en:"swept bangs"}, {zh:"中分", en:"parted hair"}, {zh:"不对称发", en:"asymmetrical hair"},
-      {zh:"漂浮发", en:"floating hair"}, {zh:"侧吸发", en:"hair intakes"}, {zh:"发夹", en:"hairclip"},
-      {zh:"发箍", en:"hairband"}, {zh:"编马尾", en:"braided ponytail"}, {zh:"花冠辫", en:"crown braid"}
     ]
   },
   {
@@ -1291,6 +1292,7 @@ function render() {
     const w = weights[en] || 1.0;
     const label = chip.dataset.zh || en;
     chip.textContent = (selected.includes(en) && w !== 1.0) ? label + " ×" + w.toFixed(1) : label;
+    applySwatch(chip, en);
   });
   const warnEl = document.getElementById("warnings");
   if (issues.length) { warnEl.textContent = "⚠ " + issues.join("　|　"); warnEl.style.display = "block"; }
@@ -1353,19 +1355,23 @@ const HAIR_COLORS = {
   "light brown hair":"#b08968","light purple hair":"#c9a7eb"
 };
 
-function makeTagChip(t, opts) {
-  const box = document.createElement("span");
-  if (opts.withDelete) box.className = "custom-chip";
-  const b = document.createElement("button");
-  b.type = "button"; b.className = "chip";
-  b.textContent = (t.zh || t.en) + (t.neg ? " ⛔" : "");
-  const hc = HAIR_COLORS[t.en];
+function applySwatch(b, en) {
+  const hc = HAIR_COLORS[en];
   if (hc !== undefined) {
     const sw = document.createElement("span");
     sw.className = "swatch";
     sw.style.background = hc === null ? "linear-gradient(90deg,#f66,#6f6,#66f)" : hc;
     b.prepend(sw);
   }
+}
+
+function makeTagChip(t, opts) {
+  const box = document.createElement("span");
+  if (opts.withDelete) box.className = "custom-chip";
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip";
+  b.textContent = (t.zh || t.en) + (t.neg ? " ⛔" : "");
+  applySwatch(b, t.en);
   b.title = t.en;
   b.dataset.en = t.en; b.dataset.zh = t.zh || "";
   b.addEventListener("mousedown", e => { e.preventDefault(); beginDrag(e, t.en); });
