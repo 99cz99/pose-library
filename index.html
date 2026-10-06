@@ -124,6 +124,7 @@
   }
   .chip.conflict { border-color: #e5484d; color: #c0353a; }
   .chip.active.conflict { background: #e5484d; border-color: #e5484d; color: #fff; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid var(--border); }
   .col-btns { display: flex; gap: 6px; }
 
   .result-bar {
@@ -530,6 +531,9 @@ const CATEGORIES = [
       {zh:"黑发", en:"black hair"}, {zh:"红发", en:"red hair"}, {zh:"粉发", en:"pink hair"},
       {zh:"蓝发", en:"blue hair"}, {zh:"紫发", en:"purple hair"}, {zh:"绿发", en:"green hair"},
       {zh:"银发", en:"silver hair"}, {zh:"挑染", en:"multicolored hair"},
+      {zh:"灰发", en:"grey hair"}, {zh:"水色发", en:"aqua hair"}, {zh:"橙发", en:"orange hair"},
+      {zh:"浅蓝发", en:"light blue hair"}, {zh:"深蓝发", en:"dark blue hair"}, {zh:"浅棕发", en:"light brown hair"},
+      {zh:"浅紫发", en:"light purple hair"},
       {zh:"鬓发", en:"sidelocks"}, {zh:"双麻花辫", en:"twin braids"}, {zh:"钻头卷", en:"drill hair"},
       {zh:"姬发式", en:"hime cut"}, {zh:"齐刘海", en:"blunt bangs"}, {zh:"单眼遮发", en:"hair over one eye"},
       {zh:"侧分刘海", en:"swept bangs"}, {zh:"中分", en:"parted hair"}, {zh:"不对称发", en:"asymmetrical hair"},
@@ -1002,7 +1006,7 @@ function rebuildCustomNeg() { customNegEn.clear(); customTags.forEach(t => { if 
 
 // 冲突/冗余互斥组（组内同时选中 2+ 个即告警）
 const CONFLICT_GROUPS = [
-  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair"] },
+  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair"] },
   { name: "发长", tags: ["long hair","very long hair","medium hair","short hair"] },
   { name: "眼色", tags: ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes","gold eyes"] },
   { name: "室内外", tags: ["indoors","outdoors"] },
@@ -1341,12 +1345,27 @@ function renderSelectedPanel() {
   });
 }
 
+const HAIR_COLORS = {
+  "white hair":"#f5f5f5","silver hair":"#c8ccd0","blonde hair":"#f2d675","brown hair":"#8a5a33",
+  "black hair":"#2a2a2e","red hair":"#c0453a","pink hair":"#f3a6c8","blue hair":"#4a7fd4",
+  "purple hair":"#9b59b6","green hair":"#3fa66a","multicolored hair":null,"grey hair":"#8a8f98",
+  "aqua hair":"#5fd4d4","orange hair":"#f0a35a","light blue hair":"#9fc8f0","dark blue hair":"#2f4a8a",
+  "light brown hair":"#b08968","light purple hair":"#c9a7eb"
+};
+
 function makeTagChip(t, opts) {
   const box = document.createElement("span");
   if (opts.withDelete) box.className = "custom-chip";
   const b = document.createElement("button");
   b.type = "button"; b.className = "chip";
   b.textContent = (t.zh || t.en) + (t.neg ? " ⛔" : "");
+  const hc = HAIR_COLORS[t.en];
+  if (hc !== undefined) {
+    const sw = document.createElement("span");
+    sw.className = "swatch";
+    sw.style.background = hc === null ? "linear-gradient(90deg,#f66,#6f6,#66f)" : hc;
+    b.prepend(sw);
+  }
   b.title = t.en;
   b.dataset.en = t.en; b.dataset.zh = t.zh || "";
   b.addEventListener("mousedown", e => { e.preventDefault(); beginDrag(e, t.en); });
