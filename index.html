@@ -442,7 +442,10 @@ const CATEGORIES = [
       {zh:"厚涂", en:"painterly"}, {zh:"单色", en:"monochrome"}, {zh:"粉彩", en:"pastel"},
       {zh:"草图", en:"sketch"},
       {zh:"动漫风格", en:"anime style"}, {zh:"插画", en:"illustration"},
-      {zh:"照片级写实", en:"photorealistic"}, {zh:"照片", en:"photo (medium)"}, {zh:"原片", en:"raw photo"}, {zh:"摄影", en:"photograph"}
+      {zh:"照片级写实", en:"photorealistic"}, {zh:"照片", en:"photo (medium)"}, {zh:"原片", en:"raw photo"}, {zh:"摄影", en:"photograph"},
+      {zh:"卡通", en:"cartoon"}, {zh:"绘画", en:"painting"}, {zh:"平涂", en:"flat color"}, {zh:"赛璐璐", en:"cel shading"},
+      {zh:"3D", en:"3d"}, {zh:"CGI", en:"cgi"}, {zh:"洋娃娃", en:"doll"}, {zh:"Q版", en:"chibi"},
+      {zh:"漫画", en:"comic"}, {zh:"漫画页", en:"manga"}, {zh:"四格漫画", en:"4koma"}, {zh:"轮廓线", en:"outline"}, {zh:"塑料", en:"plastic"}
     ]
   },
   {
@@ -477,7 +480,7 @@ const CATEGORIES = [
       {zh:"女孩", en:"girl"}, {zh:"女人", en:"woman"}, {zh:"男人", en:"man"},
       {zh:"正太", en:"shota"}, {zh:"老爷爷", en:"old man"}, {zh:"老奶奶", en:"old woman"},
       {zh:"双胞胎", en:"twins"}, {zh:"多人", en:"multiple people"}, {zh:"人群", en:"crowd"},
-      {zh:"兄妹", en:"siblings"}, {zh:"女主角", en:"heroine"}
+      {zh:"兄妹", en:"siblings"}, {zh:"女主角", en:"heroine"}, {zh:"男性", en:"male"}
     ]
   },
   {
@@ -745,7 +748,8 @@ const CATEGORIES = [
       {zh:"竖构图", en:"vertical"}, {zh:"中景", en:"medium shot"}, {zh:"全景", en:"full shot"}, {zh:"全身", en:"full body"}, {zh:"上半身", en:"upper body"}, {zh:"透视缩短", en:"foreshortening"}, {zh:"透视", en:"perspective"},
       {zh:"对称构图", en:"symmetry"}, {zh:"中心构图", en:"centered composition"}, {zh:"三分法", en:"rule of thirds"},
       {zh:"留白", en:"negative space"}, {zh:"对角线构图", en:"diagonal composition"}, {zh:"长焦", en:"telephoto"},
-      {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}, {zh:"35mm镜头", en:"35mm"}, {zh:"大光圈", en:"f/1.8"}
+      {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}, {zh:"35mm镜头", en:"35mm"}, {zh:"大光圈", en:"f/1.8"},
+      {zh:"多视角", en:"multiple views"}, {zh:"角色设定图", en:"character sheet"}, {zh:"参考图", en:"reference sheet"}, {zh:"分镜", en:"storyboard"}, {zh:"对话气泡", en:"speech bubble"}
     ]
   },
   {
@@ -799,7 +803,8 @@ const CATEGORIES = [
       {zh:"恶魔翅膀", en:"demon wings"}, {zh:"天使翅膀", en:"angel wings"}, {zh:"龙角", en:"dragon horns"},
       {zh:"龙尾", en:"dragon tail"}, {zh:"狐尾", en:"fox tail"}, {zh:"犬尾", en:"dog tail"},
       {zh:"鳞片", en:"scales"}, {zh:"机械臂", en:"mechanical arm"}, {zh:"义肢", en:"prosthetic"},
-      {zh:"机械人", en:"android"}, {zh:"机娘", en:"mecha musume"}, {zh:"机械腿", en:"mechanical legs"}, {zh:"机械关节", en:"robot joints"}, {zh:"外骨骼", en:"exoskeleton"}, {zh:"改造人", en:"cyborg"}, {zh:"能源核心", en:"energy core"}, {zh:"机械翼", en:"mechanical wings"}
+      {zh:"机械人", en:"android"}, {zh:"机娘", en:"mecha musume"}, {zh:"机械腿", en:"mechanical legs"}, {zh:"机械关节", en:"robot joints"}, {zh:"外骨骼", en:"exoskeleton"}, {zh:"改造人", en:"cyborg"}, {zh:"能源核心", en:"energy core"}, {zh:"机械翼", en:"mechanical wings"},
+      {zh:"猫耳", en:"cat ears"}, {zh:"兽耳", en:"animal ears"}, {zh:"猫尾", en:"cat tail"}
     ]
   },
   {
@@ -811,7 +816,7 @@ const CATEGORIES = [
       {zh:"龙娘", en:"dragon girl"}, {zh:"狼娘", en:"wolf girl"}, {zh:"精灵族", en:"elf"},
       {zh:"暗精灵", en:"dark elf"}, {zh:"女神", en:"goddess"}, {zh:"妖怪", en:"yokai"},
       {zh:"僵尸", en:"zombie"}, {zh:"机械娘", en:"robot girl"}, {zh:"巫妖", en:"lich"}, {zh:"鲸娘", en:"whale girl"},
-      {zh:"天狗", en:"tengu"}
+      {zh:"天狗", en:"tengu"}, {zh:"猫娘", en:"cat girl"}
     ]
   },
   {
@@ -973,6 +978,8 @@ const CATEGORIES = [
       {zh:"破处", en:"defloration"}, {zh:"处女膜", en:"hymen"}, {zh:"处女", en:"virgin"}, {zh:"下体流血", en:"bleeding from pussy"},
       {_h:"怀孕·生育"},
       {zh:"怀孕", en:"pregnant"}, {zh:"孕交", en:"pregnant sex"}, {zh:"播种", en:"breeding"}, {zh:"孕肚", en:"belly inflation"}, {zh:"产卵", en:"egg laying"},
+      {_h:"男性器官"},
+      {zh:"阴茎", en:"penis"}, {zh:"勃起", en:"erection"}, {zh:"睾丸", en:"testicles"},
       {_h:"性转·扶他"},
       {zh:"扶他", en:"futanari"}, {zh:"性转", en:"genderswap"}, {zh:"TS", en:"trans"},
       {_h:"反应·状态"},
@@ -1019,29 +1026,6 @@ CATEGORIES.forEach(c => { if (c.name.indexOf("负面") === 0) c.tags.forEach(t =
 const customNegEn = new Set(); // 自定义负向触发词
 function isNeg(en) { return negativeEn.has(en) || customNegEn.has(en); }
 function rebuildCustomNeg() { customNegEn.clear(); customTags.forEach(t => { if (t.neg) customNegEn.add(t.en); }); }
-
-// 冲突/冗余互斥组（组内同时选中 2+ 个即告警）
-const CONFLICT_GROUPS = [
-  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","platinum blonde hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair","gradient hair","two-tone hair","colored inner hair"] },
-  { name: "发长", tags: ["long hair","very long hair","medium hair","short hair"] },
-  { name: "眼色", tags: ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes","gold eyes"] },
-  { name: "室内外", tags: ["indoors","outdoors"] },
-  { name: "时间", tags: ["day","night","noon","dusk","sunrise","sunset","moonlight"] },
-  { name: "画风", tags: ["anime","semi-realistic","realistic","photorealistic"] },
-  { name: "姿势", tags: ["standing","sitting","lying","kneeling","squatting"] },
-  { name: "肤色", tags: ["pale skin","tanned","dark skin"] },
-  { name: "胸围", tags: ["flat chest","small breasts","medium breasts","large breasts","huge breasts"] },
-  { name: "女性人数", tags: ["1girl","2girls","multiple girls"] },
-  { name: "男性人数", tags: ["1boy","multiple boys"] },
-  { name: "打码状态", tags: ["censored","uncensored"] },
-  { name: "裸体状态", tags: ["nude","completely nude"] },
-  { name: "丝袜颜色", tags: ["black pantyhose","white pantyhose","nude pantyhose"] },
-  { name: "洛丽塔类型", tags: ["sweet lolita","gothic lolita","classic lolita"] },
-  { name: "景别", tags: ["full body","upper body","cowboy shot","close-up","portrait","extreme close-up"] },
-  { name: "画幅", tags: ["landscape","vertical"] },
-  { name: "视角方向", tags: ["from side","seen from front","three-quarter view"] },
-  { name: "高低角度", tags: ["high angle","low angle","top-down","worm's eye view","bird's eye view"] },
-];
 
 // 内置服装套装（点应用把整套加进选择，含负向排除）
 const OUTFITS = [
@@ -1164,48 +1148,49 @@ function toggleFavorite(en) {
   updateSuggestions(searchEl.value);
 }
 
-function toggleTag(en) {
+function toggleTag(en, neg) {
   snapshot();
   const i = selected.indexOf(en);
   if (i >= 0) { selected.splice(i, 1); delete weights[en]; }
-  else { insertSorted(en); }
+  else { insertSorted(en, neg); }
   render();
 }
 
 // 滑动选择：按住左键在标签上滑过，连续选中/取消
 let dragMode = null; // 'select' | 'deselect' | null
 
-function setTag(en, on) {
+function setTag(en, on, neg) {
   const has = selected.includes(en);
   if (has === on) return;
-  if (on) { insertSorted(en); }
+  if (on) { insertSorted(en, neg); }
   else { const i = selected.indexOf(en); if (i >= 0) selected.splice(i, 1); delete weights[en]; }
   render();
 }
 
-function beginDrag(e, en) {
+function beginDrag(e, en, neg) {
   if (e.button !== 0) return; // 只响应左键，右键留给权重
   snapshot();
   dragMode = selected.includes(en) ? 'deselect' : 'select';
-  setTag(en, dragMode === 'select');
+  setTag(en, dragMode === 'select', neg);
 }
 
-function applyDrag(en) {
+function applyDrag(en, neg) {
   if (dragMode === null) return;
-  setTag(en, dragMode === 'select');
+  setTag(en, dragMode === 'select', neg);
 }
 
 function endDrag() { dragMode = null; }
 document.addEventListener('mouseup', endDrag);
 
 // 按 tagRank 插入到正确位置（默认输出顺序「好看」）
-function insertSorted(en) {
+function insertSorted(en, neg) {
   const rank = tagRank(en);
   let i = 0;
   while (i < selected.length && tagRank(selected[i]) <= rank) i++;
   selected.splice(i, 0, en);
   weights[en] = 1.0;
-  if (isNeg(en)) negSel.add(en); else negSel.delete(en);
+  if (neg === undefined) neg = isNeg(en);
+  if (neg) negSel.add(en); else negSel.delete(en);
 }
 
 // 历史记录（撤销/重做）
@@ -1279,10 +1264,6 @@ function fmt(en) {
 function checkIssues() {
   const issues = [];
   const conflictTags = new Set();
-  CONFLICT_GROUPS.forEach(g => {
-    const hit = g.tags.filter(t => selected.includes(t));
-    if (hit.length >= 2) { issues.push("冲突【" + g.name + "】" + hit.join(" + ")); hit.forEach(t => conflictTags.add(t)); }
-  });
   const seen = new Set();
   const dups = [];
   selected.forEach(en => { if (seen.has(en)) dups.push(en); else seen.add(en); });
@@ -1402,9 +1383,10 @@ function makeTagChip(t, opts) {
   applySwatch(b, t.en);
   b.title = t.en;
   b.dataset.en = t.en; b.dataset.zh = t.zh || "";
-  b.addEventListener("mousedown", e => { e.preventDefault(); beginDrag(e, t.en); });
-  b.addEventListener("mouseenter", () => applyDrag(t.en));
-  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleTag(t.en); } });
+  if (t.neg) b.dataset.neg = "1";
+  b.addEventListener("mousedown", e => { e.preventDefault(); beginDrag(e, t.en, !!t.neg); });
+  b.addEventListener("mouseenter", () => applyDrag(t.en, !!t.neg));
+  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleTag(t.en, !!t.neg); } });
   b.addEventListener("contextmenu", e => { e.preventDefault(); (e.shiftKey ? preciseWeight(t.en) : cycleWeight(t.en)); });
   box.appendChild(b);
   if (opts.withDelete) {
@@ -1476,6 +1458,7 @@ function buildCategories() {
 
     const wrap = document.createElement("div");
     wrap.className = "chips";
+    const isNegCat = cat.name.indexOf("负面") === 0;
     cat.tags.forEach(t => {
       if (t._h) {
         const h = document.createElement("div");
@@ -1483,7 +1466,7 @@ function buildCategories() {
         h.textContent = t._h;
         wrap.appendChild(h);
       } else {
-        wrap.appendChild(makeTagChip(t, {}));
+        wrap.appendChild(makeTagChip(Object.assign({}, t, { neg: isNegCat }), {}));
       }
     });
     customInCat.forEach(t => wrap.appendChild(makeTagChip(t, { withDelete: true, onDelete: removeCustomTag })));
@@ -2212,7 +2195,7 @@ function applyFilter(q) {
 // ============ 搜索联想 + 收藏 ============
 function buildTagIndex() {
   const list = [];
-  CATEGORIES.forEach(c => c.tags.forEach(t => { if (!t._h) list.push({ zh: t.zh || t.en, en: t.en, neg: isNeg(t.en) }); }));
+  CATEGORIES.forEach(c => c.tags.forEach(t => { if (!t._h) list.push({ zh: t.zh || t.en, en: t.en, neg: c.name.indexOf("负面") === 0 }); }));
   customTags.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: !!t.neg }));
   triggerWords.forEach(t => list.push({ zh: t.zh || t.en, en: t.en, neg: false }));
   return list;
@@ -2245,7 +2228,7 @@ function updateSuggestions(q) {
     fav.addEventListener("click", e => { e.stopPropagation(); toggleFavorite(t.en); });
     row.appendChild(zh); row.appendChild(en); row.appendChild(fav);
     row.addEventListener("mousedown", e => { e.preventDefault(); });
-    row.addEventListener("click", () => { toggleTag(t.en); searchEl.value = ""; applyFilter(""); hideSuggest(); });
+    row.addEventListener("click", () => { toggleTag(t.en, t.neg); searchEl.value = ""; applyFilter(""); hideSuggest(); });
     suggestEl.appendChild(row);
   });
   suggestEl.style.display = "block";
