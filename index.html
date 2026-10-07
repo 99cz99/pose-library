@@ -191,6 +191,12 @@
   .sel-item input[type="range"] { flex: 0 0 90px; }
   .sel-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 5px; }
   .sel-item .del:hover { color: #d33; }
+  .sel-item.neg { border-color: rgba(229,72,77,.45); background: rgba(229,72,77,.07); }
+  .sel-item.neg .sel-label { color: #e5484d; }
+  .sel-item .flip { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: 4px; line-height: 1; }
+  .sel-item.neg .flip { color: #e5484d; }
+  .sel-item .flip:hover { background: rgba(128,128,128,.15); }
+  .chip.active.neg { background: #e5484d; border-color: #e5484d; color: #fff; }
   .custom-row input:focus { border-color: var(--accent); }
   .custom-row .btn { flex: 0 0 auto; }
   .custom-chip { display: inline-flex; align-items: center; }
@@ -384,9 +390,12 @@ window.__AUTH_MSG = '';
     <div class="sel-list" id="sel-list"></div>
   </details>
   <details class="sel-panel" id="import-panel">
-    <summary>导入提示词（用 --neg 分隔负面）</summary>
+    <summary>导入提示词（正向 / 负向分开）</summary>
     <div class="import-row">
-      <input id="import-input" type="text" placeholder="如 1girl, no pants --neg lowres, bad hands">
+      <input id="import-pos" type="text" placeholder="正向标签，如 1girl, solo, long hair">
+    </div>
+    <div class="import-row">
+      <input id="import-neg" type="text" placeholder="负向标签，如 lowres, bad hands">
       <button class="btn primary" id="import-btn">导入</button>
     </div>
   </details>
@@ -960,6 +969,8 @@ const CATEGORIES = [
       {zh:"体格差", en:"size difference"}, {zh:"巨根", en:"huge penis"}, {zh:"小人", en:"mini person"},
       {_h:"体型改造·扩张"},
       {zh:"胸部扩张", en:"breast expansion"}, {zh:"膨胀", en:"inflation"}, {zh:"超巨", en:"hyper"},
+      {_h:"处女·破处"},
+      {zh:"破处", en:"defloration"}, {zh:"处女膜", en:"hymen"}, {zh:"处女", en:"virgin"}, {zh:"下体流血", en:"bleeding from pussy"},
       {_h:"怀孕·生育"},
       {zh:"怀孕", en:"pregnant"}, {zh:"孕交", en:"pregnant sex"}, {zh:"播种", en:"breeding"}, {zh:"孕肚", en:"belly inflation"}, {zh:"产卵", en:"egg laying"},
       {_h:"性转·扶他"},
@@ -1002,6 +1013,7 @@ const selected = []; // 已选英文 tag（按选择顺序）
 const weights = {};   // en -> 权重（默认 1.0，输出 (tag:1.2)）
 const WEIGHT_STEPS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
 const extraNeg = [];  // 服装套装的负向标签（附加到负面框，不进选中态）
+const negSel = new Set(); // 当前被标为负向的已选标签（可切换）
 const negativeEn = new Set();
 CATEGORIES.forEach(c => { if (c.name.indexOf("负面") === 0) c.tags.forEach(t => negativeEn.add(t.en)); });
 const customNegEn = new Set(); // 自定义负向触发词
@@ -1193,6 +1205,7 @@ function insertSorted(en) {
   while (i < selected.length && tagRank(selected[i]) <= rank) i++;
   selected.splice(i, 0, en);
   weights[en] = 1.0;
+  if (isNeg(en)) negSel.add(en); else negSel.delete(en);
 }
 
 // 历史记录（撤销/重做）
@@ -1200,13 +1213,15 @@ let history = [];
 let redoStack = [];
 const MAX_HISTORY = 50;
 function snapshot() {
-  history.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  history.push({ selected: selected.slice(), weights: Object.assign({}, weights), negSel: Array.from(negSel) });
   if (history.length > MAX_HISTORY) history.shift();
   redoStack.length = 0;
 }
 function restore(st) {
   selected.length = 0;
   st.selected.forEach(en => selected.push(en));
+  negSel.clear();
+  (st.negSel || []).forEach(en => negSel.add(en));
   Object.keys(weights).forEach(k => delete weights[k]);
   Object.assign(weights, st.weights);
   render();
@@ -1214,13 +1229,13 @@ function restore(st) {
 function undo() {
   if (history.length === 0) return;
   const st = history.pop();
-  redoStack.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  redoStack.push({ selected: selected.slice(), weights: Object.assign({}, weights), negSel: Array.from(negSel) });
   restore(st);
 }
 function redo() {
   if (redoStack.length === 0) return;
   const st = redoStack.pop();
-  history.push({ selected: selected.slice(), weights: Object.assign({}, weights) });
+  history.push({ selected: selected.slice(), weights: Object.assign({}, weights), negSel: Array.from(negSel) });
   restore(st);
 }
 
@@ -1283,8 +1298,8 @@ function fmtOutput(en) {
 }
 
 function refreshOutput() {
-  const pos = selected.filter(en => !isNeg(en)).map(fmtOutput);
-  const neg = [...selected.filter(en => isNeg(en)), ...extraNeg].sort((a, b) => tagRank(a) - tagRank(b)).map(fmtOutput);
+  const pos = selected.filter(en => !negSel.has(en)).map(fmtOutput);
+  const neg = [...selected.filter(en => negSel.has(en)), ...extraNeg].sort((a, b) => tagRank(a) - tagRank(b)).map(fmtOutput);
   resultPosEl.value = pos.join(", ");
   resultNegEl.value = neg.join(", ");
 }
@@ -1297,6 +1312,7 @@ function render() {
   mainEl.querySelectorAll(".chip[data-en]").forEach(chip => {
     const en = chip.dataset.en;
     chip.classList.toggle("active", selected.includes(en));
+    chip.classList.toggle("neg", negSel.has(en));
     chip.classList.toggle("conflict", conflictTags.has(en));
     const w = weights[en] || 1.0;
     const label = chip.dataset.zh || en;
@@ -1314,10 +1330,9 @@ function renderSelectedPanel() {
   const list = document.getElementById("sel-list");
   if (!list) return;
   list.innerHTML = "";
-  const posTags = selected.filter(en => !isNeg(en));
-  posTags.forEach(en => {
+  selected.forEach(en => {
     const row = document.createElement("div");
-    row.className = "sel-item";
+    row.className = "sel-item" + (negSel.has(en) ? " neg" : "");
     row.dataset.en = en;
     const label = document.createElement("span");
     label.className = "sel-label";
@@ -1334,10 +1349,14 @@ function renderSelectedPanel() {
       label.textContent = en + (weights[en] !== 1.0 ? " ×" + weights[en].toFixed(2) : "");
       refreshOutput();
     });
+    const flip = document.createElement("button");
+    flip.type = "button"; flip.className = "flip"; flip.textContent = negSel.has(en) ? "负" : "正";
+    flip.title = "切换正/负向";
+    flip.addEventListener("click", () => { snapshot(); if (negSel.has(en)) negSel.delete(en); else negSel.add(en); render(); });
     const del = document.createElement("button");
     del.type = "button"; del.className = "del"; del.textContent = "×"; del.title = "取消选中";
     del.addEventListener("click", () => toggleTag(en));
-    row.appendChild(label); row.appendChild(slider); row.appendChild(del);
+    row.appendChild(label); row.appendChild(slider); row.appendChild(flip); row.appendChild(del);
     label.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", en); e.dataTransfer.effectAllowed = "move"; });
     row.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; });
     row.addEventListener("drop", e => {
@@ -1402,33 +1421,36 @@ function parseTags(str) {
 }
 
 function importPrompt() {
-  const input = document.getElementById("import-input");
-  const raw = (input.value || "").trim();
-  if (!raw) return;
+  const posInput = document.getElementById("import-pos");
+  const negInput = document.getElementById("import-neg");
+  const rawPos = (posInput.value || "").trim();
+  const rawNeg = (negInput.value || "").trim();
+  if (!rawPos && !rawNeg) return;
   snapshot();
-  const parts = raw.split(/\s*--neg\s*/i);
-  const apply = (str, negMode) => {
-    parseTags(str).forEach(part => {
-      let tag = part, w = 1.0;
-      const wm = part.match(/^\((.+?):([\d.]+)\)$/);
-      if (wm) { tag = wm[1].trim(); w = parseFloat(wm[2]) || 1.0; }
-      if (!tag) return;
-      if (negMode) {
-        if (isNeg(tag)) {
-          if (!selected.includes(tag)) insertSorted(tag);
-        } else if (!extraNeg.includes(tag)) {
-          extraNeg.push(tag);
-        }
-        weights[tag] = w;
-      } else {
-        if (!selected.includes(tag)) insertSorted(tag);
-        weights[tag] = w;
-      }
-    });
-  };
-  apply(parts[0] || "", false);
-  apply(parts[1] || "", true);
-  input.value = "";
+  parseTags(rawPos).forEach(part => {
+    let tag = part, w = 1.0;
+    const wm = part.match(/^\((.+?):([\d.]+)\)$/);
+    if (wm) { tag = wm[1].trim(); w = parseFloat(wm[2]) || 1.0; }
+    if (!tag) return;
+    if (!selected.includes(tag)) insertSorted(tag);
+    negSel.delete(tag);
+    weights[tag] = w;
+  });
+  parseTags(rawNeg).forEach(part => {
+    let tag = part, w = 1.0;
+    const wm = part.match(/^\((.+?):([\d.]+)\)$/);
+    if (wm) { tag = wm[1].trim(); w = parseFloat(wm[2]) || 1.0; }
+    if (!tag) return;
+    if (isNeg(tag)) {
+      if (!selected.includes(tag)) insertSorted(tag);
+      negSel.add(tag);
+    } else if (!extraNeg.includes(tag)) {
+      extraNeg.push(tag);
+    }
+    weights[tag] = w;
+  });
+  posInput.value = "";
+  negInput.value = "";
   render();
 }
 
@@ -1657,8 +1679,8 @@ function renderPresetSection() {
 function savePreset() {
   const name = (document.getElementById("preset-name").value || "").trim();
   if (!name) return;
-  const pos = selected.filter(en => !isNeg(en));
-  const neg = selected.filter(en => isNeg(en));
+  const pos = selected.filter(en => !negSel.has(en));
+  const neg = selected.filter(en => negSel.has(en));
   const existing = presets.find(p => p.name === name);
   if (existing) { existing.pos = pos; existing.neg = neg; }
   else presets.push({ name, pos, neg });
@@ -1675,8 +1697,8 @@ function loadPreset(name) {
     (p.pos || []).forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
     (p.neg || []).forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
   } else {
-    (p.pos || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); });
-    (p.neg || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); });
+    (p.pos || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); negSel.delete(en); });
+    (p.neg || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); negSel.add(en); });
   }
   render();
 }
@@ -1803,7 +1825,7 @@ function applyOutfit(name) {
     });
   } else {
     o.pos.forEach(en => {
-      if (!selected.includes(en)) { selected.push(en); weights[en] = (o.w && o.w[en]) || 1.0; }
+      if (!selected.includes(en)) { insertSorted(en); weights[en] = (o.w && o.w[en]) || 1.0; }
       else if (o.w && o.w[en] !== undefined) weights[en] = o.w[en];
     });
     (o.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
@@ -2280,7 +2302,7 @@ function mergedText() {
 function selectAllNegative() {
   CATEGORIES.forEach(c => {
     if (c.name.indexOf("负面") === 0) {
-      c.tags.forEach(t => { if (!t._h && !selected.includes(t.en)) { selected.push(t.en); weights[t.en] = 1.0; } });
+      c.tags.forEach(t => { if (!t._h && !selected.includes(t.en)) { selected.push(t.en); weights[t.en] = 1.0; negSel.add(t.en); } });
     }
   });
   render();
@@ -2318,6 +2340,7 @@ function randomPrompt() {
   snapshot();
   selected.length = 0;
   extraNeg.length = 0;
+  negSel.clear();
   ["masterpiece","best quality"].forEach(en => { selected.push(en); weights[en] = 1.2; });
   RANDOM_DIMS.forEach(dim => {
     const pick = dim[Math.floor(Math.random() * dim.length)];
@@ -2343,9 +2366,10 @@ document.getElementById("copy-neg").addEventListener("click", () => copyText(res
 document.getElementById("copy-all").addEventListener("click", () => copyText(mergedText(), resultPosEl, document.getElementById("copy-all")));
 document.getElementById("neg-all").addEventListener("click", selectAllNegative);
 document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
-document.getElementById("clear").addEventListener("click", () => { snapshot(); selected.length = 0; render(); });
+document.getElementById("clear").addEventListener("click", () => { snapshot(); selected.length = 0; negSel.clear(); render(); });
 document.getElementById("import-btn").addEventListener("click", importPrompt);
-document.getElementById("import-input").addEventListener("keydown", e => { if (e.key === "Enter") importPrompt(); });
+document.getElementById("import-pos").addEventListener("keydown", e => { if (e.key === "Enter") importPrompt(); });
+document.getElementById("import-neg").addEventListener("keydown", e => { if (e.key === "Enter") importPrompt(); });
 document.getElementById("undo").addEventListener("click", undo);
 document.getElementById("redo").addEventListener("click", redo);
 resultPosEl.addEventListener("click", () => resultPosEl.select());
