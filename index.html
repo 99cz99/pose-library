@@ -1133,6 +1133,12 @@ let customCharacters = [];
 try { customCharacters = JSON.parse(localStorage.getItem(CUSTOM_CHARACTERS_KEY) || "[]"); } catch (e) { customCharacters = []; }
 function saveCustomCharacters() { try { localStorage.setItem(CUSTOM_CHARACTERS_KEY, JSON.stringify(customCharacters)); } catch (e) {} }
 
+// 画师串（localStorage 持久化）
+const ARTIST_KEY = "pg_artist_strings";
+let artistStrings = [];
+try { artistStrings = JSON.parse(localStorage.getItem(ARTIST_KEY) || "[]"); } catch (e) { artistStrings = []; }
+function saveArtistStrings() { try { localStorage.setItem(ARTIST_KEY, JSON.stringify(artistStrings)); } catch (e) {} }
+
 // 收藏（localStorage 持久化）
 const FAV_KEY = "pg_favorites";
 let favorites = [];
@@ -1300,7 +1306,7 @@ function render() {
   const warnEl = document.getElementById("warnings");
   if (issues.length) { warnEl.textContent = "⚠ " + issues.join("　|　"); warnEl.style.display = "block"; }
   else { warnEl.style.display = "none"; }
-  updateOutfitChips();
+  refreshPresetChips();
   renderSelectedPanel();
 }
 
@@ -1636,6 +1642,7 @@ function renderPresetSection() {
     loadBtn.type = "button"; loadBtn.className = "chip";
     loadBtn.textContent = p.name + "（" + (p.pos.length + p.neg.length) + "）";
     loadBtn.title = "点击加载该预设";
+    loadBtn.dataset.pos = JSON.stringify(p.pos || []);
     loadBtn.addEventListener("click", () => loadPreset(p.name));
     const del = document.createElement("button");
     del.type = "button"; del.className = "del"; del.textContent = "×"; del.title = "删除预设";
@@ -1663,9 +1670,14 @@ function loadPreset(name) {
   const p = presets.find(x => x.name === name);
   if (!p) return;
   snapshot();
-  selected.length = 0;
-  (p.pos || []).forEach(en => selected.push(en));
-  (p.neg || []).forEach(en => selected.push(en));
+  const applied = p.pos.length > 0 && p.pos.every(en => selected.includes(en));
+  if (applied) {
+    (p.pos || []).forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
+    (p.neg || []).forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
+  } else {
+    (p.pos || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); });
+    (p.neg || []).forEach(en => { if (!selected.includes(en)) insertSorted(en); });
+  }
   render();
 }
 
@@ -1676,7 +1688,7 @@ function deletePreset(name) {
 }
 
 function exportConfig() {
-  const blob = new Blob([JSON.stringify({ customTags, presets, customOutfits, customTemplates, triggerWords, customCharacters }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ customTags, presets, customOutfits, customTemplates, triggerWords, customCharacters, artistStrings }, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "prompt_backup.json";
@@ -1742,12 +1754,22 @@ function importConfig(file) {
           }
         });
       }
+      if (Array.isArray(data.artistStrings)) {
+        data.artistStrings.forEach(a => {
+          if (a && typeof a.name === "string" && Array.isArray(a.tags)) {
+            const ex = artistStrings.find(x => x.name === a.name);
+            if (ex) { ex.tags = a.tags; }
+            else artistStrings.push({ name: a.name, tags: a.tags });
+          }
+        });
+      }
       savePresets();
       saveCustom();
       saveCustomOutfits();
       saveCustomTemplates();
       saveCustomCharacters();
       saveTriggers();
+      saveArtistStrings();
       rebuildCustomNeg();
       renderPresetSection();
       renderCustomSection();
@@ -1756,6 +1778,7 @@ function importConfig(file) {
       buildCategories();
       renderOutfitSection();
       renderTemplateSection();
+      renderArtistSection();
       render();
     } catch (e) { alert("恢复失败：文件不是有效的备份 JSON"); }
   };
@@ -1788,12 +1811,11 @@ function applyOutfit(name) {
   render();
 }
 
-function updateOutfitChips() {
-  document.querySelectorAll('#outfit-section .chip[data-outfit]').forEach(b => {
-    const name = b.dataset.outfit;
-    const o = OUTFITS.find(x => x.name === name) || customOutfits.find(x => x.name === name);
-    if (!o) return;
-    b.classList.toggle('active', o.pos.length > 0 && o.pos.every(en => selected.includes(en)));
+function refreshPresetChips() {
+  document.querySelectorAll('.chip[data-pos]').forEach(b => {
+    let pos = [];
+    try { pos = JSON.parse(b.dataset.pos || '[]'); } catch (e) { pos = []; }
+    b.classList.toggle('active', pos.length > 0 && pos.every(en => selected.includes(en)));
   });
 }
 
@@ -1801,19 +1823,26 @@ function applyCharacter(name) {
   const c = CHARACTERS.find(x => x.name === name) || customCharacters.find(x => x.name === name);
   if (!c) return;
   snapshot();
-  if (c.trigger) {
-    if (!triggerWords.some(t => t.en === c.trigger)) {
-      triggerWords.push({ zh: c.name, en: c.trigger });
-      saveTriggers();
-      renderTriggerSection();
+  const applied = c.pos.length > 0 && c.pos.every(en => selected.includes(en));
+  if (applied) {
+    if (c.trigger) { const i = selected.indexOf(c.trigger); if (i >= 0) { selected.splice(i, 1); delete weights[c.trigger]; } }
+    (c.pos || []).forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
+    (c.neg || []).forEach(en => { const i = extraNeg.indexOf(en); if (i >= 0) extraNeg.splice(i, 1); });
+  } else {
+    if (c.trigger) {
+      if (!triggerWords.some(t => t.en === c.trigger)) {
+        triggerWords.push({ zh: c.name, en: c.trigger });
+        saveTriggers();
+        renderTriggerSection();
+      }
+      if (!selected.includes(c.trigger)) { insertSorted(c.trigger); weights[c.trigger] = 1.3; }
     }
-    if (!selected.includes(c.trigger)) { insertSorted(c.trigger); weights[c.trigger] = 1.3; }
+    (c.pos || []).forEach(en => {
+      if (!selected.includes(en)) { insertSorted(en); weights[en] = (c.w && c.w[en]) || 1.0; }
+      else if (c.w && c.w[en] !== undefined) weights[en] = c.w[en];
+    });
+    (c.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
   }
-  (c.pos || []).forEach(en => {
-    if (!selected.includes(en)) { insertSorted(en); weights[en] = (c.w && c.w[en]) || 1.0; }
-    else if (c.w && c.w[en] !== undefined) weights[en] = c.w[en];
-  });
-  (c.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
   render();
 }
 
@@ -1869,7 +1898,7 @@ function renderOutfitSection() {
     b.type = "button"; b.className = "chip";
     b.textContent = o.name;
     b.dataset.outfit = o.name;
-    b.classList.toggle('active', o.pos.length > 0 && o.pos.every(en => selected.includes(en)));
+    b.dataset.pos = JSON.stringify(o.pos || []);
     b.title = (o.pos.length > 0 && o.pos.every(en => selected.includes(en)) ? "取消" : "应用") + "：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
     b.addEventListener("click", () => applyOutfit(o.name));
     box.appendChild(b);
@@ -1943,6 +1972,7 @@ function renderCharacterSection() {
     b.textContent = c.name;
     b.title = "套用：" + (c.trigger ? c.trigger + ", " : "") + (c.pos || []).join(", ") + (c.neg && c.neg.length ? "（负向 " + c.neg.join(", ") + "）" : "");
     b.dataset.search = c.name + " " + (c.trigger || "") + " " + (c.pos || []).join(" ");
+    b.dataset.pos = JSON.stringify(c.pos || []);
     b.addEventListener("click", () => applyCharacter(c.name));
     box.appendChild(b);
     if (isCustom) {
@@ -1963,10 +1993,14 @@ function applyTemplate(name) {
   const t = TEMPLATES.find(x => x.name === name) || customTemplates.find(x => x.name === name);
   if (!t) return;
   snapshot();
-  selected.length = 0;
-  extraNeg.length = 0;
-  t.pos.forEach(en => { selected.push(en); weights[en] = (t.w && t.w[en]) || 1.0; });
-  (t.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  const applied = t.pos.length > 0 && t.pos.every(en => selected.includes(en));
+  if (applied) {
+    t.pos.forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
+    (t.neg || []).forEach(en => { const i = extraNeg.indexOf(en); if (i >= 0) extraNeg.splice(i, 1); });
+  } else {
+    t.pos.forEach(en => { if (!selected.includes(en)) { insertSorted(en); weights[en] = (t.w && t.w[en]) || 1.0; } else if (t.w && t.w[en] !== undefined) weights[en] = t.w[en]; });
+    (t.neg || []).forEach(en => { if (!extraNeg.includes(en)) extraNeg.push(en); });
+  }
   render();
 }
 
@@ -2022,6 +2056,7 @@ function renderTemplateSection() {
     b.type = "button"; b.className = "chip";
     b.textContent = o.name;
     b.title = "套用：" + o.pos.join(", ") + (o.neg && o.neg.length ? "（负向 " + o.neg.join(", ") + "）" : "");
+    b.dataset.pos = JSON.stringify(o.pos || []);
     b.addEventListener("click", () => applyTemplate(o.name));
     box.appendChild(b);
     if (isCustom) {
@@ -2036,6 +2071,89 @@ function renderTemplateSection() {
   customTemplates.forEach(o => renderOne(o, true));
   details.appendChild(list);
   librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
+}
+
+// ============ 画师串 ============
+function renderArtistSection() {
+  const old = document.getElementById("artist-section");
+  if (old) old.remove();
+  const details = document.createElement("details");
+  details.id = "artist-section";
+  details.open = false;
+  const summary = document.createElement("summary");
+  summary.innerHTML = "<span>画师串</span><span class='tag-count'>" + artistStrings.length + " 个</span>";
+  details.appendChild(summary);
+
+  const form = document.createElement("div");
+  form.className = "custom-row";
+  const nameIn = document.createElement("input");
+  nameIn.id = "artist-name"; nameIn.placeholder = "串名称，如 厚涂画师";
+  const tagsIn = document.createElement("input");
+  tagsIn.id = "artist-tags"; tagsIn.placeholder = "画师 tag（逗号分隔）";
+  const addBtn = document.createElement("button");
+  addBtn.type = "button"; addBtn.className = "btn primary"; addBtn.textContent = "新建";
+  addBtn.addEventListener("click", addArtistString);
+  tagsIn.addEventListener("keydown", e => { if (e.key === "Enter") addArtistString(); });
+  form.appendChild(nameIn); form.appendChild(tagsIn); form.appendChild(addBtn);
+  details.appendChild(form);
+
+  const list = document.createElement("div");
+  list.className = "chips";
+  if (artistStrings.length === 0) {
+    const tip = document.createElement("span");
+    tip.className = "empty-tip"; tip.style.width = "100%";
+    tip.textContent = "暂无画师串，输入名称 + 画师 tag（逗号分隔）后点「新建」";
+    list.appendChild(tip);
+  }
+  artistStrings.forEach(a => {
+    const box = document.createElement("span");
+    box.className = "custom-chip";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    b.textContent = a.name;
+    b.title = "点一下叠加、再点取消：" + (a.tags || []).join(", ");
+    b.dataset.pos = JSON.stringify(a.tags || []);
+    b.addEventListener("click", () => applyArtistString(a.name));
+    box.appendChild(b);
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "del"; del.textContent = "×";
+    del.addEventListener("click", () => removeArtistString(a.name));
+    box.appendChild(del);
+    list.appendChild(box);
+  });
+  details.appendChild(list);
+  librarySectionsEl.insertBefore(details, librarySectionsEl.firstChild);
+}
+
+function addArtistString() {
+  const name = (document.getElementById("artist-name").value || "").trim();
+  const tags = parseTags(document.getElementById("artist-tags").value);
+  if (!name || tags.length === 0) return;
+  const existing = artistStrings.find(a => a.name === name);
+  if (existing) { existing.tags = tags; }
+  else artistStrings.push({ name, tags });
+  saveArtistStrings();
+  renderArtistSection();
+}
+
+function removeArtistString(name) {
+  artistStrings = artistStrings.filter(a => a.name !== name);
+  saveArtistStrings();
+  renderArtistSection();
+}
+
+function applyArtistString(name) {
+  const a = artistStrings.find(x => x.name === name);
+  if (!a) return;
+  snapshot();
+  const pos = a.tags || [];
+  const applied = pos.length > 0 && pos.every(en => selected.includes(en));
+  if (applied) {
+    pos.forEach(en => { const i = selected.indexOf(en); if (i >= 0) { selected.splice(i, 1); delete weights[en]; } });
+  } else {
+    pos.forEach(en => { if (!selected.includes(en)) insertSorted(en); });
+  }
+  render();
 }
 
 const SYNONYMS = {
@@ -2281,6 +2399,7 @@ renderOutfitSection();
 renderTemplateSection();
 renderTriggerSection();
 renderCharacterSection();
+renderArtistSection();
 renderFavoriteSection();
 buildCatNav();
 render();
