@@ -414,7 +414,7 @@ const CATEGORIES = [
       {zh:"高分辨率", en:"highres"}, {zh:"超高清", en:"absurdres"}, {zh:"超精细", en:"ultra-detailed"},
       {zh:"细节丰富", en:"intricate details"}, {zh:"锐聚焦", en:"sharp focus"}, {zh:"景深", en:"depth of field"},
       {zh:"散景", en:"bokeh"}, {zh:"模糊背景", en:"blurry background"}, {zh:"柔和光", en:"soft lighting"}, {zh:"轮廓光", en:"rim light"},
-      {zh:"体积光", en:"volumetric lighting"}, {zh:"逆光", en:"backlighting"}, {zh:"戏剧光", en:"dramatic lighting"}, {zh:"明暗对照", en:"chiaroscuro"}, {zh:"上帝光", en:"god rays"}, {zh:"烛光", en:"candlelight"}, {zh:"阳光", en:"sunlight"}, {zh:"昏暗", en:"dimly lit"}, {zh:"氛围光", en:"mood lighting"}, {zh:"冷暖对比光", en:"cold and warm lighting"}, {zh:"空气透视", en:"atmospheric perspective"}, {zh:"暖光", en:"warm light"}, {zh:"灯笼光", en:"lantern light"}, {zh:"星光", en:"starlight"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
+      {zh:"体积光", en:"volumetric lighting"}, {zh:"逆光", en:"backlighting"}, {zh:"戏剧光", en:"dramatic lighting"}, {zh:"电影光", en:"cinematic lighting"}, {zh:"顶光", en:"overhead light"}, {zh:"焦散", en:"caustics"}, {zh:"明暗对照", en:"chiaroscuro"}, {zh:"上帝光", en:"god rays"}, {zh:"烛光", en:"candlelight"}, {zh:"阳光", en:"sunlight"}, {zh:"昏暗", en:"dimly lit"}, {zh:"氛围光", en:"mood lighting"}, {zh:"冷暖对比光", en:"cold and warm lighting"}, {zh:"空气透视", en:"atmospheric perspective"}, {zh:"暖光", en:"warm light"}, {zh:"灯笼光", en:"lantern light"}, {zh:"星光", en:"starlight"}, {zh:"精细脸", en:"detailed face"}, {zh:"精细眼睛", en:"detailed eyes"},
       {zh:"精细手", en:"detailed hands"}, {zh:"五指分明", en:"five fingers"}, {zh:"精细", en:"detailed"},
       {zh:"精细下体", en:"detailed pussy"}, {zh:"精细臀部", en:"detailed ass"}, {zh:"精细乳头", en:"detailed nipples"},
       {zh:"精细肛门", en:"detailed anus"}, {zh:"精细阴蒂", en:"detailed clitoris"}, {zh:"精细阴毛", en:"detailed pubic hair"},
@@ -432,7 +432,8 @@ const CATEGORIES = [
       {zh:"油画", en:"oil painting"}, {zh:"水彩", en:"watercolor"}, {zh:"线稿", en:"lineart"},
       {zh:"厚涂", en:"painterly"}, {zh:"单色", en:"monochrome"}, {zh:"粉彩", en:"pastel"},
       {zh:"草图", en:"sketch"},
-      {zh:"动漫风格", en:"anime style"}, {zh:"插画", en:"illustration"}
+      {zh:"动漫风格", en:"anime style"}, {zh:"插画", en:"illustration"},
+      {zh:"照片级写实", en:"photorealistic"}, {zh:"照片", en:"photo (medium)"}, {zh:"原片", en:"raw photo"}, {zh:"摄影", en:"photograph"}
     ]
   },
   {
@@ -495,7 +496,7 @@ const CATEGORIES = [
       {zh:"妊娠纹", en:"stretch marks"}, {zh:"晒痕", en:"tan lines"}, {zh:"纹身", en:"tattoo"},
       {zh:"伤疤", en:"scar"}, {zh:"胎记", en:"birthmark"}, {zh:"体毛", en:"body hair"},
       {zh:"肚脐环", en:"navel piercing"}, {zh:"凸肚脐", en:"outie navel"},
-      {zh:"挺翘胸", en:"perky breasts"}, {zh:"圆润胸", en:"round breasts"}, {zh:"尖胸", en:"pointy breasts"}
+      {zh:"挺翘胸", en:"perky breasts"}, {zh:"圆润胸", en:"round breasts"}, {zh:"尖胸", en:"pointy breasts"}, {zh:"自然胸", en:"natural breasts"}
     ]
   },
   {
@@ -515,7 +516,7 @@ const CATEGORIES = [
       {zh:"写实皮肤", en:"realistic skin"}, {zh:"瓷肌", en:"porcelain skin"}, {zh:"水光肌", en:"dewy skin"},
       {zh:"半透肤", en:"translucent skin"}, {zh:"健康皮肤", en:"healthy skin"},
       {zh:"油性皮肤", en:"oily skin"}, {zh:"哑光肤", en:"matte skin"}, {zh:"鸡皮疙瘩", en:"goosebumps"},
-      {zh:"青筋", en:"visible veins"}, {zh:"湿润肤", en:"moist skin"}
+      {zh:"青筋", en:"visible veins"}, {zh:"湿润肤", en:"moist skin"}, {zh:"精细皮肤纹理", en:"detailed skin texture"}, {zh:"毛孔", en:"skin pores"}, {zh:"次表面散射", en:"subsurface scattering"}
     ]
   },
   {
@@ -525,7 +526,7 @@ const CATEGORIES = [
       {zh:"侧马尾", en:"side ponytail"}, {zh:"麻花辫", en:"braid"}, {zh:"发髻", en:"hair bun"},
       {zh:"双丸子头", en:"double bun"}, {zh:"呆毛", en:"ahoge"}, {zh:"刘海", en:"bangs"},
       {zh:"发丝遮眼", en:"hair between eyes"}, {zh:"波浪发", en:"wavy hair"}, {zh:"直发", en:"straight hair"},
-      {zh:"卷发", en:"curly hair"}, {zh:"乱发", en:"messy hair"}, {zh:"发饰", en:"hair ornament"},
+      {zh:"卷发", en:"curly hair"}, {zh:"乱发", en:"messy hair"}, {zh:"湿发", en:"wet hair"}, {zh:"发饰", en:"hair ornament"},
       {zh:"花饰", en:"hair flower"}, {zh:"发带", en:"hair ribbon"},
       {zh:"鬓发", en:"sidelocks"}, {zh:"双麻花辫", en:"twin braids"}, {zh:"钻头卷", en:"drill hair"},
       {zh:"姬发式", en:"hime cut"}, {zh:"齐刘海", en:"blunt bangs"}, {zh:"单眼遮发", en:"hair over one eye"},
@@ -536,7 +537,7 @@ const CATEGORIES = [
       {zh:"白发", en:"white hair"}, {zh:"金发", en:"blonde hair"}, {zh:"棕发", en:"brown hair"},
       {zh:"黑发", en:"black hair"}, {zh:"红发", en:"red hair"}, {zh:"粉发", en:"pink hair"},
       {zh:"蓝发", en:"blue hair"}, {zh:"紫发", en:"purple hair"}, {zh:"绿发", en:"green hair"},
-      {zh:"银发", en:"silver hair"}, {zh:"挑染", en:"multicolored hair"},
+      {zh:"银发", en:"silver hair"}, {zh:"白金发", en:"platinum blonde hair"}, {zh:"挑染", en:"multicolored hair"},
       {zh:"灰发", en:"grey hair"}, {zh:"水色发", en:"aqua hair"}, {zh:"橙发", en:"orange hair"},
       {zh:"浅蓝发", en:"light blue hair"}, {zh:"深蓝发", en:"dark blue hair"}, {zh:"浅棕发", en:"light brown hair"},
       {zh:"浅紫发", en:"light purple hair"},
@@ -564,7 +565,7 @@ const CATEGORIES = [
       {zh:"双下巴", en:"double chin"}, {zh:"酒窝", en:"dimples"}, {zh:"瓜子脸", en:"slim face"},
       {zh:"小脸", en:"small face"},
       {zh:"方下巴", en:"square jaw"}, {zh:"长脸", en:"long face"}, {zh:"棱角脸", en:"angular face"},
-      {zh:"柔和五官", en:"soft features"}
+      {zh:"柔和五官", en:"soft features"}, {zh:"写实脸", en:"realistic face"}
     ]
   },
   {
@@ -695,7 +696,7 @@ const CATEGORIES = [
   {
     name: "场景", tags: [
       {zh:"室内", en:"indoors"}, {zh:"室外", en:"outdoors"}, {zh:"卧室", en:"bedroom"},
-      {zh:"浴室", en:"bathroom"}, {zh:"教室", en:"classroom"}, {zh:"海边", en:"beach"},
+      {zh:"浴室", en:"bathroom"}, {zh:"淋浴", en:"shower"}, {zh:"蒸汽", en:"steam"}, {zh:"教室", en:"classroom"}, {zh:"海边", en:"beach"},
       {zh:"森林", en:"forest"}, {zh:"夜晚", en:"night"}, {zh:"日落", en:"sunset"},
       {zh:"雨天", en:"rain"}, {zh:"雪", en:"snow"}, {zh:"水中", en:"water"},
       {zh:"天空", en:"sky"}, {zh:"窗边", en:"window"}, {zh:"床", en:"bed"},
@@ -735,7 +736,7 @@ const CATEGORIES = [
       {zh:"竖构图", en:"vertical"}, {zh:"中景", en:"medium shot"}, {zh:"全景", en:"full shot"}, {zh:"全身", en:"full body"}, {zh:"上半身", en:"upper body"}, {zh:"透视缩短", en:"foreshortening"}, {zh:"透视", en:"perspective"},
       {zh:"对称构图", en:"symmetry"}, {zh:"中心构图", en:"centered composition"}, {zh:"三分法", en:"rule of thirds"},
       {zh:"留白", en:"negative space"}, {zh:"对角线构图", en:"diagonal composition"}, {zh:"长焦", en:"telephoto"},
-      {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}
+      {zh:"出画", en:"out of frame"}, {zh:"方形构图", en:"square"}, {zh:"35mm镜头", en:"35mm"}, {zh:"大光圈", en:"f/1.8"}
     ]
   },
   {
@@ -881,7 +882,7 @@ const CATEGORIES = [
       {zh:"丰满", en:"plump"}, {zh:"肥胖", en:"fat"}, {zh:"肉感", en:"chubby"}, {zh:"不对称胸", en:"uneven breasts"},
       {zh:"崩嘴", en:"bad mouth"}, {zh:"差唇", en:"bad lips"}, {zh:"畸形唇", en:"deformed lips"}, {zh:"坏嘴", en:"broken mouth"}, {zh:"多余牙齿", en:"extra teeth"}, {zh:"尖牙", en:"fangs"},
       {zh:"过曝", en:"overexposed"}, {zh:"过饱和", en:"oversaturated"}, {zh:"高饱和", en:"high saturation"}, {zh:"噪点", en:"noise"}, {zh:"颗粒", en:"grain"},
-      {zh:"杂物", en:"clutter"}, {zh:"多余物体", en:"extra objects"}, {zh:"漂浮物", en:"floating objects"}, {zh:"错位物品", en:"misplaced items"}, {zh:"碎片", en:"debris"}
+      {zh:"杂物", en:"clutter"}, {zh:"多余物体", en:"extra objects"}, {zh:"漂浮物", en:"floating objects"}, {zh:"错位物品", en:"misplaced items"}, {zh:"碎片", en:"debris"}, {zh:"卡通", en:"cartoon"}, {zh:"塑料", en:"plastic"}, {zh:"绘画", en:"painting"}
     ]
   },
   {
@@ -1009,12 +1010,12 @@ function rebuildCustomNeg() { customNegEn.clear(); customTags.forEach(t => { if 
 
 // 冲突/冗余互斥组（组内同时选中 2+ 个即告警）
 const CONFLICT_GROUPS = [
-  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair","gradient hair","two-tone hair","colored inner hair"] },
+  { name: "发色", tags: ["white hair","blonde hair","brown hair","black hair","red hair","pink hair","blue hair","purple hair","green hair","silver hair","platinum blonde hair","multicolored hair","grey hair","aqua hair","orange hair","light blue hair","dark blue hair","light brown hair","light purple hair","gradient hair","two-tone hair","colored inner hair"] },
   { name: "发长", tags: ["long hair","very long hair","medium hair","short hair"] },
   { name: "眼色", tags: ["blue eyes","red eyes","green eyes","yellow eyes","pink eyes","purple eyes","brown eyes","gold eyes"] },
   { name: "室内外", tags: ["indoors","outdoors"] },
   { name: "时间", tags: ["day","night","noon","dusk","sunrise","sunset","moonlight"] },
-  { name: "画风", tags: ["anime","semi-realistic","realistic"] },
+  { name: "画风", tags: ["anime","semi-realistic","realistic","photorealistic"] },
   { name: "姿势", tags: ["standing","sitting","lying","kneeling","squatting"] },
   { name: "肤色", tags: ["pale skin","tanned","dark skin"] },
   { name: "胸围", tags: ["flat chest","small breasts","medium breasts","large breasts","huge breasts"] },
